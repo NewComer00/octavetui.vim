@@ -1,42 +1,65 @@
+let s:autoload_root = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+
 let s:cli_buf_name = 'Octave CLI'
 let s:cli_bufnr = ''
 let s:vexp_buf_name = 'Variable Explorer'
 let s:vexp_bufnr = ''
 
-function! s:UpdateVexp(variable_file, history_file, timerid) abort
-    if filereadable(a:variable_file) && filereadable(a:history_file)
-        call timer_stop(a:timerid)
+let s:cmd_set_envvar = 'export'
+let s:shell_command_flag = '-c'
+if has('win32')
+    let s:cmd_set_envvar = 'set'
+    let s:shell_command_flag = '/K'
+endif
 
+let s:tmpfile_history = $TMP.'/octavetui_history'
+let s:history_num = 10
+let s:tmpfile_variable = $TMP.'/octavetui_variable'
+
+let s:envvar_history = 'OCTAVETUI_HISTORY'
+let s:envvar_history_num = 'OCTAVETUI_HISTORY_NUM'
+let s:envvar_variable = 'OCTAVETUI_VARIABLE'
+
+let s:check_var_interval = 500
+
+function! s:UpdateVexp(timerid) abort
+    if filereadable(s:tmpfile_history) && filereadable(s:tmpfile_variable)
+        call timer_stop(a:timerid)
         call deletebufline(s:vexp_bufnr, 1, '$')
-        call setbufline(s:vexp_bufnr, 1, readfile(a:variable_file))
-        call delete(a:variable_file)
-        call delete(a:history_file)
+        call setbufline(s:vexp_bufnr, 1, readfile(s:tmpfile_variable))
     endif
 endfunction
 
 function! s:CheckVar() abort
-    let history_file = tempname()
-    let history_num = 10
-    let cmd_save_history = "__octavetui_histnum__=".history_num.";__octavetui_tmp__='".history_file."';history('-w',__octavetui_tmp__);__octavetui_str__=fileread(__octavetui_tmp__);__octavetui_fp__=fopen(__octavetui_tmp__,'wt');fputs(__octavetui_fp__,strjoin(strsplit(__octavetui_str__,newline)(max(1,end-1-__octavetui_histnum__):end-1),newline));fclose(__octavetui_fp__);clear __octavetui_tmp__ __octavetui_fp__ __octavetui_str__ __octavetui_histnum__;"
-    let cmd_restore_history = "history('-r','".history_file."');"
-
-    let variable_file = tempname()
-    let cmd = "__octavetui_fp__=fopen('".variable_file."','at');fputs(__octavetui_fp__,evalc('whos -regexp (?!^__octavetui_fp__$)(^.*$)'));__octavetui_fp__=fclose(__octavetui_fp__);clear __octavetui_fp__;"
-
-    call term_sendkeys(s:cli_bufnr, cmd_save_history . cmd . cmd_restore_history . "\<CR>")
-    call timer_start(200,
-                \ function('s:UpdateVexp', [variable_file,history_file]),
+    let cmd = 'run octavetui_update.m'
+    call term_sendkeys(s:cli_bufnr, cmd . "\<CR>")
+    call timer_start(s:check_var_interval,
+                \ function('s:UpdateVexp', []),
                 \ {'repeat': -1})
 endfunction
 
 function! octavetui#StartCli() abort
-    if has('nvim')
-        exec 'split term://' . g:octavetui_octave_path
-    else
-        let s:cli_bufnr = term_start(g:octavetui_octave_path,
-                    \ {"term_kill": "term", "term_name": s:cli_buf_name})
-        tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>CheckVar()<CR>
-    endif
+    let l:cmd_cli_startup = [ &shell, s:shell_command_flag,
+                \ s:cmd_set_envvar.' '.s:envvar_history.'='.s:tmpfile_history
+                \ .' && '.s:cmd_set_envvar.' '.s:envvar_history_num.'='.s:history_num
+                \ .' && '.s:cmd_set_envvar.' '.s:envvar_variable.'='.s:tmpfile_variable
+                \ .' && '.g:octavetui_octave_path
+                \ .' --path '.s:autoload_root
+                \ ]
+
+    let s:cli_bufnr = term_start(l:cmd_cli_startup,
+                \ {"term_kill": "term", "term_name": s:cli_buf_name})
+    tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>CheckVar()<CR>
+    nnoremap <silent> <C-q> :call octavetui#QuitCli()<CR>
+endfunction
+
+function! octavetui#QuitCli() abort
+    let l:cmd_octave_quit = 'exit'
+    let l:cmd_shell_quit = 'exit'
+    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd_octave_quit."\<CR>")
+    call term_sendkeys(s:cli_bufnr, l:cmd_shell_quit."\<CR>")
+    sleep 500m
+    exec 'bdelete' . s:cli_bufnr
 endfunction
 
 function! octavetui#StartVarExp() abort
