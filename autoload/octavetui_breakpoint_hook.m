@@ -1,12 +1,13 @@
-function octavetui_breakpoint_hook(filename, linenum_str)
+function octavetui_breakpoint_hook(operation, filename, linenum_str)
     octavetui_history_hook('write');
 
-    tempfile = getenv('OCTAVETUI_BREAKPOINT');
+    if strcmp(operation, 'set')
+        dbstop(filename, linenum_str);
+    else
+        dbclear(filename, linenum_str);
+    end
 
-    actual_linenum = dbstop(filename, linenum_str);
-    fp = fopen(tempfile, 'wt');
-    fputs(fp, int2str(actual_linenum));
-    fp = fclose(fp);
+    octavetui_breakpoint_update_hook(false);
 
     octavetui_history_hook('read');
 end
