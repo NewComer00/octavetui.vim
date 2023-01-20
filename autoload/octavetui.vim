@@ -173,4 +173,9 @@ function! octavetui#StartAll() abort
     nnoremap <silent> <C-q> :call octavetui#QuitCli()<CR>
     nnoremap <silent> <C-b> :call octavetui#SetBreakpoint()<CR>
     nnoremap <silent> <M-b> :call octavetui#UnsetBreakpoint()<CR>
+    augroup octavetui
+        autocmd!
+        " refresh tui after open another code file
+        autocmd! BufReadPost * if winnr() == s:main_winnr | call s:Refresh() | endif
+    augroup END
 endfunction

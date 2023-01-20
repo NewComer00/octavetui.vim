@@ -18,4 +18,4 @@ function octavetui_breakpoint_update_hook(preserve_history)
     if preserve_history
         octavetui_history_hook('read');
     end
-
+end
