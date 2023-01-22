@@ -3,11 +3,11 @@ function octavetui_update_history(operation)
     tempfile = getenv('OCTAVETUI_HISTORY');
 
     if strcmp(operation, 'write')
-        history('-w',tempfile);
-        str = fileread(tempfile);
+        history_list = history(history_num+1);
         fp = fopen(tempfile,'wt');
-        fputs(fp,strjoin(strsplit(str,newline)(max(1,end-1-history_num):end-1),newline));
+        fputs(fp,strjoin(history_list,newline));
         fclose(fp);
     elseif strcmp(operation, 'read')
         history('-r',tempfile);
+        delete(tempfile);
     end

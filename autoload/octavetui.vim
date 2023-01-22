@@ -4,7 +4,7 @@ let s:autoload_root = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 let s:variable_check_interval = 200
 let s:breakpoint_check_interval = 200
 
-let s:history_num = 10
+let s:history_num = 20
 let s:color_breakpoint = 'darkblue'
 
 let s:main_winnr = ''
