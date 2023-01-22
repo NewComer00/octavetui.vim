@@ -1,8 +1,4 @@
-function octavetui_breakpoint_update_hook(preserve_history)
-    if preserve_history
-        octavetui_history_hook('write');
-    end
-
+function octavetui_update_breakpoint()
     tempfile = getenv('OCTAVETUI_BREAKPOINT');
 
     fp = fopen(tempfile, 'wt');
@@ -14,8 +10,4 @@ function octavetui_breakpoint_update_hook(preserve_history)
             bp.name,bp.file,bp.line,bp.cond);
     end
     fp = fclose(fp);
-
-    if preserve_history
-        octavetui_history_hook('read');
-    end
 end

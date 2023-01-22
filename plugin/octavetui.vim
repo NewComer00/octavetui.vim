@@ -16,3 +16,4 @@ endif
 let g:octavetui_octave_path= get(g:, 'octavetui_octave_path', s:default_octave_executable)
 
 command! StartAll call octavetui#StartAll()
+command! RefreshAll call octavetui#RefreshAll()

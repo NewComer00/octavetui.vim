@@ -1,8 +1,8 @@
 let s:autoload_root = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 
 " give octave some time to execute our commands
-let s:hook_variable_check_interval = 200
-let s:hook_breakpoint_check_interval = 200
+let s:variable_check_interval = 200
+let s:breakpoint_check_interval = 200
 
 let s:history_num = 10
 let s:color_breakpoint = 'darkblue'
@@ -40,17 +40,17 @@ function! s:Init() abort
     let s:main_winnr = winnr()
 endfunction
 
-function! s:Refresh() abort
+function! s:Update() abort
     call s:RemoveTmpFile()
 
-    let cmd = 'run octavetui_update_hook'
+    let cmd = 'run octavetui_update'
     call term_sendkeys(s:cli_bufnr, cmd . "\<CR>")
 
-    call timer_start(s:hook_variable_check_interval,
-                \ function('s:UpdateVexp', []),
+    call timer_start(s:variable_check_interval,
+                \ function('s:UpdateVarExp', []),
                 \ {'repeat': -1})
 
-    call timer_start(s:hook_breakpoint_check_interval,
+    call timer_start(s:breakpoint_check_interval,
                 \ function('s:UpdateBreakpoint', []),
                 \ {'repeat': -1})
 endfunction
@@ -60,7 +60,7 @@ function! s:RemoveTmpFile() abort
     call delete(s:tmpfile_breakpoint)
 endfunction
 
-function! s:UpdateVexp(timerid) abort
+function! s:UpdateVarExp(timerid) abort
     if s:FileIsFree(s:tmpfile_variable)
         call timer_stop(a:timerid)
         call deletebufline(s:vexp_bufnr, 1, '$')
@@ -127,7 +127,7 @@ function! octavetui#StartCli() abort
 
     let s:cli_bufnr = term_start(l:cmd_cli_startup,
                 \ {"term_kill": "term", "term_name": s:cli_buf_name})
-    tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>Refresh()<CR>
+    tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>Update()<CR>
 endfunction
 
 function! octavetui#QuitCli() abort
@@ -149,9 +149,9 @@ endfunction
 function! octavetui#SetBreakpoint() abort
     let l:octave_filename = expand('%:t')
     let l:line_num = line('.')
-    let l:cmd = "octavetui_breakpoint_hook set '".l:octave_filename."' ".l:line_num
+    let l:cmd = "octavetui_toggle_breakpoint set '".l:octave_filename."' ".l:line_num
     call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
-    call timer_start(s:hook_breakpoint_check_interval,
+    call timer_start(s:breakpoint_check_interval,
                 \ function('s:UpdateBreakpoint', []),
                 \ {'repeat': -1})
 endfunction
@@ -159,11 +159,15 @@ endfunction
 function! octavetui#UnsetBreakpoint() abort
     let l:octave_filename = expand('%:t')
     let l:line_num = line('.')
-    let l:cmd = "octavetui_breakpoint_hook unset '".l:octave_filename."' ".l:line_num
+    let l:cmd = "octavetui_toggle_breakpoint unset '".l:octave_filename."' ".l:line_num
     call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
-    call timer_start(s:hook_breakpoint_check_interval,
+    call timer_start(s:breakpoint_check_interval,
                 \ function('s:UpdateBreakpoint', []),
                 \ {'repeat': -1})
+endfunction
+
+function! octavetui#RefreshAll() abort
+    call s:Update()
 endfunction
 
 function! octavetui#StartAll() abort
@@ -176,6 +180,6 @@ function! octavetui#StartAll() abort
     augroup octavetui
         autocmd!
         " refresh tui after open another code file
-        autocmd! BufReadPost * if winnr() == s:main_winnr | call s:Refresh() | endif
+        autocmd! BufReadPost * if winnr() == s:main_winnr | call s:Update() | endif
     augroup END
 endfunction

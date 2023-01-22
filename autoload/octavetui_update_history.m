@@ -1,4 +1,4 @@
-function octavetui_history_hook(operation)
+function octavetui_update_history(operation)
     history_num = str2num(getenv('OCTAVETUI_HISTORY_NUM'));
     tempfile = getenv('OCTAVETUI_HISTORY');
 
