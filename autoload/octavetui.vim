@@ -1,17 +1,17 @@
 let s:autoload_root = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 
 " give octave some time to execute our commands
-let s:variable_check_interval = 200
-let s:breakpoint_check_interval = 200
+let s:callback_check_interval = 200
 
 let s:history_num = 20
-let s:color_breakpoint = 'darkblue'
 
-let s:main_winnr = ''
+let s:main_winid = ''
 let s:cli_buf_name = 'Octave CLI'
 let s:cli_bufnr = ''
+let s:cli_winid = ''
 let s:vexp_buf_name = 'Variable Explorer'
 let s:vexp_bufnr = ''
+let s:vexp_winid = ''
 
 let s:cmd_set_envvar = 'export'
 let s:shell_command_flag = '-c'
@@ -31,13 +31,43 @@ let s:envvar_variable = 'OCTAVETUI_VARIABLE'
 let s:tmpfile_breakpoint = $TMP.'/octavetui_breakpoint'
 let s:envvar_breakpoint = 'OCTAVETUI_BREAKPOINT'
 
+let s:tmpfile_nextexec = $TMP.'/octavetui_nextexec'
+let s:envvar_nextexec = 'OCTAVETUI_NEXTEXEC'
 
-exec 'highlight octavetui_hl_breakpoint ctermbg='.s:color_breakpoint.' guibg='.s:color_breakpoint
 
+let s:highlight_breakpoint_name = 'octavetui_hl_breakpoint'
+let s:highlight_breakpoint_color = 'darkblue'
+call hlset([{'name': s:highlight_breakpoint_name,
+            \ 'ctermbg': s:highlight_breakpoint_color,
+            \ 'guibg': s:highlight_breakpoint_color,
+            \ }])
+let s:sign_breakpoint_name = 'octavetui_sign_breakpoint'
+let s:sign_breakpoint_group = s:sign_breakpoint_name
+let s:sign_breakpoint_hl = s:highlight_breakpoint_name
+let s:sign_breakpoint_text = '🔴'
+let s:sign_breakpoint_priority = 100
+call sign_define(s:sign_breakpoint_name,
+            \ {'linehl': s:sign_breakpoint_hl,
+            \ 'text': s:sign_breakpoint_text})
+
+let s:highlight_nextexec_name = 'octavetui_hl_nextexec'
+let s:highlight_nextexec_color = 'darkgreen'
+call hlset([{'name': s:highlight_nextexec_name,
+            \ 'ctermbg': s:highlight_nextexec_color,
+            \ 'guibg': s:highlight_nextexec_color,
+            \ }])
+let s:sign_nextexec_name = 'octavetui_sign_nextexec'
+let s:sign_nextexec_group = s:sign_nextexec_name
+let s:sign_nextexec_hl = s:highlight_nextexec_name
+let s:sign_nextexec_text = '⏩'
+let s:sign_nextexec_priority = s:sign_breakpoint_priority + 1
+call sign_define(s:sign_nextexec_name,
+            \ {'linehl': s:sign_nextexec_hl,
+            \ 'text': s:sign_nextexec_text})
 
 function! s:Init() abort
     call s:RemoveTmpFile()
-    let s:main_winnr = winnr()
+    let s:main_winid = win_getid()
 endfunction
 
 function! s:Update() abort
@@ -46,18 +76,23 @@ function! s:Update() abort
     let cmd = 'run octavetui_update'
     call term_sendkeys(s:cli_bufnr, cmd . "\<CR>")
 
-    call timer_start(s:variable_check_interval,
+    call timer_start(s:callback_check_interval,
                 \ function('s:UpdateVarExp', []),
                 \ {'repeat': -1})
 
-    call timer_start(s:breakpoint_check_interval,
+    call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
+                \ {'repeat': -1})
+
+    call timer_start(s:callback_check_interval,
+                \ function('s:UpdateNextexec', []),
                 \ {'repeat': -1})
 endfunction
 
 function! s:RemoveTmpFile() abort
     call delete(s:tmpfile_variable)
     call delete(s:tmpfile_breakpoint)
+    call delete(s:tmpfile_nextexec)
 endfunction
 
 function! s:UpdateVarExp(timerid) abort
@@ -94,8 +129,12 @@ function! s:UpdateBreakpoint(timerid) abort
     if s:FileIsFree(s:tmpfile_breakpoint)
         call timer_stop(a:timerid)
 
-        call clearmatches(s:main_winnr)
+        call sign_unplace(s:sign_breakpoint_group,
+                    \ {'buffer':winbufnr(s:main_winid)})
+
         let l:breakpoint_list = readfile(s:tmpfile_breakpoint)
+        let l:main_buf_file = expand('#'.winbufnr(s:main_winid).':p')
+        let l:sign_list = []
         for l:bp in l:breakpoint_list
             let l:info = split(l:bp, '\t')
             let l:bp_name = l:info[0]
@@ -103,15 +142,62 @@ function! s:UpdateBreakpoint(timerid) abort
             let l:bp_line = str2nr(l:info[2])
             let l:bp_cond = l:info[3]
 
-            let l:main_buf_file = expand('#'.winbufnr(s:main_winnr).':p')
             if l:bp_file == l:main_buf_file
-                call matchaddpos('octavetui_hl_breakpoint', [l:bp_line],
-                            \ 10, -1,
-                            \ {'window': s:main_winnr}
-                            \ )
+                let l:sign_dict = {
+                            \ 'group': s:sign_breakpoint_group,
+                            \ 'id': l:bp_line,
+                            \ 'name': s:sign_breakpoint_name,
+                            \ 'buffer': l:bp_file,
+                            \ 'lnum': l:bp_line,
+                            \ 'priority': s:sign_breakpoint_priority,
+                            \ }
+                call add(l:sign_list, l:sign_dict)
             endif
         endfor
+        call sign_placelist(l:sign_list)
+
         call delete(s:tmpfile_breakpoint)
+    endif
+endfunction
+
+function! s:UpdateNextexec(timerid) abort
+    if s:FileIsFree(s:tmpfile_nextexec)
+        call timer_stop(a:timerid)
+
+        call sign_unplace(s:sign_nextexec_group,
+                    \ {'buffer':winbufnr(s:main_winid)})
+
+        let l:main_buf_file = expand('#'.winbufnr(s:main_winid).':p')
+        let l:nextexec = readfile(s:tmpfile_nextexec)
+        if len(l:nextexec) == 1
+            let l:info = split(l:nextexec[0], '\t')
+            if len(l:info) == 2
+                " jump to code file and code line
+                let l:codeline = l:info[0]
+                let l:codefile = l:info[1]
+                call win_gotoid(s:main_winid)
+                " change buffer file in the code window
+                if l:main_buf_file != l:codefile
+                    exec 'e +' . l:codeline . ' ' . l:codefile
+                else
+                    exec l:codeline
+                endif
+                " center the code line
+                normal! zz
+                call win_gotoid(s:cli_winid)
+
+                let l:sign_dict = {
+                            \ 'group': s:sign_nextexec_group,
+                            \ 'id': l:codeline,
+                            \ 'name': s:sign_nextexec_name,
+                            \ 'buffer': l:codefile,
+                            \ 'lnum': l:codeline,
+                            \ 'priority': s:sign_nextexec_priority,
+                            \ }
+                call sign_placelist([l:sign_dict])
+            endif
+        endif
+        call delete(s:tmpfile_nextexec)
     endif
 endfunction
 
@@ -121,12 +207,16 @@ function! octavetui#StartCli() abort
                 \ .' && '.s:cmd_set_envvar.' '.s:envvar_history_num.'='.s:history_num
                 \ .' && '.s:cmd_set_envvar.' '.s:envvar_variable.'='.s:tmpfile_variable
                 \ .' && '.s:cmd_set_envvar.' '.s:envvar_breakpoint.'='.s:tmpfile_breakpoint
+                \ .' && '.s:cmd_set_envvar.' '.s:envvar_nextexec.'='.s:tmpfile_nextexec
                 \ .' && '.g:octavetui_octave_path
                 \ .' --path '.s:autoload_root
                 \ ]
 
     let s:cli_bufnr = term_start(l:cmd_cli_startup,
                 \ {"term_kill": "term", "term_name": s:cli_buf_name})
+
+    let s:cli_winid = win_getid()
+
     tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>Update()<CR>
 endfunction
 
@@ -144,6 +234,7 @@ function! octavetui#StartVarExp() abort
     call setbufvar(s:vexp_bufnr, '&buftype', 'nofile')
     call bufload(s:vexp_bufnr)
     exec 'botright vertical sbuffer' . s:vexp_bufnr
+    let s:vexp_winid = win_getid()
 endfunction
 
 function! octavetui#SetBreakpoint() abort
@@ -151,7 +242,7 @@ function! octavetui#SetBreakpoint() abort
     let l:line_num = line('.')
     let l:cmd = "octavetui_toggle_breakpoint set '".l:octave_filename."' ".l:line_num
     call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
-    call timer_start(s:breakpoint_check_interval,
+    call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
                 \ {'repeat': -1})
 endfunction
@@ -161,7 +252,7 @@ function! octavetui#UnsetBreakpoint() abort
     let l:line_num = line('.')
     let l:cmd = "octavetui_toggle_breakpoint unset '".l:octave_filename."' ".l:line_num
     call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
-    call timer_start(s:breakpoint_check_interval,
+    call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
                 \ {'repeat': -1})
 endfunction
@@ -180,6 +271,6 @@ function! octavetui#StartAll() abort
     augroup octavetui
         autocmd!
         " refresh tui after open another code file
-        autocmd! BufReadPost * if winnr() == s:main_winnr | call s:Update() | endif
+        autocmd! BufReadPost * if win_getid() == s:main_winid | call s:Update() | endif
     augroup END
 endfunction

@@ -9,5 +9,5 @@ function octavetui_update_breakpoint()
         fprintf(fp, template,...
             bp.name,bp.file,bp.line,bp.cond);
     end
-    fp = fclose(fp);
+    fclose(fp);
 end
