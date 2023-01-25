@@ -152,8 +152,7 @@ function! s:UpdateNextexec(timerid) abort
     if s:FileIsFree(s:tmpfile_nextexec)
         call timer_stop(a:timerid)
 
-        call sign_unplace(s:sign_nextexec_group,
-                    \ {'buffer':winbufnr(s:main_winid)})
+        call sign_unplace(s:sign_nextexec_group)
 
         let l:main_buf_file = expand('#'.winbufnr(s:main_winid).':p')
         let l:nextexec = readfile(s:tmpfile_nextexec)
