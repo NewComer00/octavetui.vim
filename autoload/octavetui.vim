@@ -1,8 +1,6 @@
 let s:autoload_root = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 
-" give octave some time to execute our commands
 let s:callback_check_interval = 200
-
 let s:history_num = 20
 
 let s:main_winid = ''
@@ -13,24 +11,13 @@ let s:vexp_buf_name = 'Variable Explorer'
 let s:vexp_bufnr = ''
 let s:vexp_winid = ''
 
-let s:cmd_set_envvar = 'export'
-let s:shell_command_flag = '-c'
-if has('win32')
-    let s:cmd_set_envvar = 'set'
-    let s:shell_command_flag = '/K'
-endif
-
 let s:tmpfile_history = $TMP.'/octavetui_history'
 let s:envvar_history = 'OCTAVETUI_HISTORY'
-
 let s:envvar_history_num = 'OCTAVETUI_HISTORY_NUM'
-
 let s:tmpfile_variable = $TMP.'/octavetui_variable'
 let s:envvar_variable = 'OCTAVETUI_VARIABLE'
-
 let s:tmpfile_breakpoint = $TMP.'/octavetui_breakpoint'
 let s:envvar_breakpoint = 'OCTAVETUI_BREAKPOINT'
-
 let s:tmpfile_nextexec = $TMP.'/octavetui_nextexec'
 let s:envvar_nextexec = 'OCTAVETUI_NEXTEXEC'
 
@@ -64,6 +51,7 @@ let s:sign_nextexec_priority = s:sign_breakpoint_priority + 1
 call sign_define(s:sign_nextexec_name,
             \ {'linehl': s:sign_nextexec_hl,
             \ 'text': s:sign_nextexec_text})
+
 
 function! s:Init() abort
     call s:RemoveTmpFile()
@@ -202,19 +190,24 @@ function! s:UpdateNextexec(timerid) abort
 endfunction
 
 function! octavetui#StartCli() abort
-    let l:cmd_cli_startup = [ &shell, s:shell_command_flag,
-                \ s:cmd_set_envvar.' '.s:envvar_history.'='.s:tmpfile_history
-                \ .' && '.s:cmd_set_envvar.' '.s:envvar_history_num.'='.s:history_num
-                \ .' && '.s:cmd_set_envvar.' '.s:envvar_variable.'='.s:tmpfile_variable
-                \ .' && '.s:cmd_set_envvar.' '.s:envvar_breakpoint.'='.s:tmpfile_breakpoint
-                \ .' && '.s:cmd_set_envvar.' '.s:envvar_nextexec.'='.s:tmpfile_nextexec
-                \ .' && '.g:octavetui_octave_path
-                \ .' --path '.s:autoload_root
-                \ ]
 
-    let s:cli_bufnr = term_start(l:cmd_cli_startup,
-                \ {"term_kill": "term", "term_name": s:cli_buf_name})
+    let l:cli_envs = {
+                \ s:envvar_history: s:tmpfile_history,
+                \ s:envvar_history_num: s:history_num,
+                \ s:envvar_variable: s:tmpfile_variable,
+                \ s:envvar_breakpoint: s:tmpfile_breakpoint,
+                \ s:envvar_nextexec: s:tmpfile_nextexec,
+                \ }
 
+    let l:cli_start_options = {
+                \ "env": l:cli_envs,
+                \ "term_kill": "term",
+                \ "term_name": s:cli_buf_name,
+                \ }
+
+    let l:cli_start_cmd = [g:octavetui_octave_path, '--path', s:autoload_root]
+
+    let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
     let s:cli_winid = win_getid()
 
     tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>Update()<CR>
@@ -234,6 +227,9 @@ function! octavetui#StartVarExp() abort
     call setbufvar(s:vexp_bufnr, '&buftype', 'nofile')
     call bufload(s:vexp_bufnr)
     exec 'botright vertical sbuffer' . s:vexp_bufnr
+
+    setlocal nonumber
+    setlocal norelativenumber
     let s:vexp_winid = win_getid()
 endfunction
 
@@ -268,9 +264,4 @@ function! octavetui#StartAll() abort
     nnoremap <silent> <C-q> :call octavetui#QuitCli()<CR>
     nnoremap <silent> <C-b> :call octavetui#SetBreakpoint()<CR>
     nnoremap <silent> <M-b> :call octavetui#UnsetBreakpoint()<CR>
-    augroup octavetui
-        autocmd!
-        " refresh tui after open another code file
-        autocmd! BufReadPost * if win_getid() == s:main_winid | call s:Update() | endif
-    augroup END
 endfunction
