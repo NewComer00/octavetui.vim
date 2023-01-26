@@ -1,7 +1,8 @@
-" Title:        Example Plugin
-" Description:  A plugin to provide an example for creating Vim plugins.
-" Last Change:  8 November 2021
-" Maintainer:   Example User <https://github.com/example-user>
+" Title:        octavetui.vim
+" Description:  This plugin is aimed to provide a text-based user interfaces
+"               (TUI) for GNU Octave.
+" Last Change:  25 JAN 2023
+" Maintainer:   NewComer00 <https://github.com/NewComer00>
 
 if exists('g:loaded_octavetui')
     finish
