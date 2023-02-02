@@ -18,5 +18,3 @@ let g:octavetui_octave_path= get(g:, 'octavetui_octave_path', s:default_octave_e
 
 command! OTUIStart call octavetui#StartTui()
 command! OTUIStop call octavetui#StopTui()
-command! OTActivateKeymap call octavetui#SetKeymap()
-command! OTDeactivateKeymap call octavetui#UnsetKeymap()

@@ -58,6 +58,9 @@ call sign_define(s:sign_nextexec_name,
 " COMMANDS FOR USERS
 " ============================================================================
 
+command! OTActivateKeymap call octavetui#SetKeymap()
+command! OTDeactivateKeymap call octavetui#UnsetKeymap()
+
 command! OTRun call octavetui#DBRun(1)
 command! OTRunStacked call octavetui#DBRun(0)
 command! OTSetBreakpoint call octavetui#SetBreakpoint()
@@ -67,6 +70,7 @@ command! OTStepIn call octavetui#DBStep('in')
 command! OTStepOut call octavetui#DBStep('out')
 command! OTQuit call octavetui#DBQuit('all')
 command! OTQuitStacked call octavetui#DBQuit('')
+command! OTContinue call octavetui#DBContinue()
 
 
 " ============================================================================
@@ -103,6 +107,7 @@ function! octavetui#SetKeymap() abort
     nnoremap <buffer> <silent> R :OTRunStacked<CR>
     nnoremap <buffer> <silent> q :OTQuit<CR>
     nnoremap <buffer> <silent> Q :OTQuitStacked<CR>
+    nnoremap <buffer> <silent> c :OTContinue<CR>
 endfunction
 
 " unset keymap for current buffer
@@ -117,6 +122,7 @@ function! octavetui#UnsetKeymap() abort
     silent! nunmap <buffer> R
     silent! nunmap <buffer> q
     silent! nunmap <buffer> Q
+    silent! nunmap <buffer> c
 endfunction
 
 function! octavetui#StartCli() abort
@@ -202,6 +208,11 @@ function! octavetui#DBStep(arguments) abort
     call octavetui#ExecCmd(l:cmd)
 endfunction
 
+function! octavetui#DBContinue() abort
+    let l:cmd = 'dbcont'
+    call octavetui#ExecCmd(l:cmd)
+endfunction
+
 
 " ============================================================================
 " PRIVATE FUNCTIONS
@@ -262,15 +273,27 @@ function! s:FileIsFree(filename) abort
     if !filereadable(a:filename)
         return v:false
     else
-        let l:temp = tempname()
-        call rename(a:filename, l:temp)
-        if filereadable(a:filename)
-            " file is readable but occupied
-            call delete(l:temp)
-            return v:false
+        if has('win32')
+            let l:temp = tempname()
+            call rename(a:filename, l:temp)
+            if filereadable(a:filename)
+                " file is readable but occupied
+                call delete(l:temp)
+                return v:false
+            else
+                call rename(l:temp, a:filename)
+                return v:true
+            endif
         else
-            call rename(l:temp, a:filename)
-            return v:true
+            " on linux or other system with lsof command
+            let l:cmd = 'lsof ' . a:filename
+            silent call system(l:cmd)
+            " if the file is opened in other processes
+            if v:shell_error == 0
+                return v:false
+            else
+                return v:true
+            endif
         endif
     endif
 endfunction
