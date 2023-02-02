@@ -81,9 +81,7 @@ endfunction
 
 function! octavetui#StopTui() abort
     let l:cmd_octave_quit = 'exit'
-    let l:cmd_shell_quit = 'exit'
     call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd_octave_quit."\<CR>")
-    call term_sendkeys(s:cli_bufnr, l:cmd_shell_quit."\<CR>")
 
     sleep 500m
     exec 'bdelete' . s:cli_bufnr
