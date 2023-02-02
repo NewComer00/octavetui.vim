@@ -1,6 +1,7 @@
-let s:autoload_root = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+let s:plugin_root = fnamemodify(resolve(expand('<sfile>:p')), ':h:h')
+let s:octave_script_dir = s:plugin_root . '/octave'
 
-let s:callback_check_interval = 200
+let s:callback_check_interval = 50
 let s:history_num = 20
 
 let s:main_winid = ''
@@ -11,14 +12,14 @@ let s:vexp_buf_name = 'Variable Explorer'
 let s:vexp_bufnr = ''
 let s:vexp_winid = ''
 
-let s:tmpfile_history = $TMP.'/octavetui_history'
+let s:tmpfile_history = tempname()
 let s:envvar_history = 'OCTAVETUI_HISTORY'
 let s:envvar_history_num = 'OCTAVETUI_HISTORY_NUM'
-let s:tmpfile_variable = $TMP.'/octavetui_variable'
+let s:tmpfile_variable = tempname()
 let s:envvar_variable = 'OCTAVETUI_VARIABLE'
-let s:tmpfile_breakpoint = $TMP.'/octavetui_breakpoint'
+let s:tmpfile_breakpoint = tempname()
 let s:envvar_breakpoint = 'OCTAVETUI_BREAKPOINT'
-let s:tmpfile_nextexec = $TMP.'/octavetui_nextexec'
+let s:tmpfile_nextexec = tempname()
 let s:envvar_nextexec = 'OCTAVETUI_NEXTEXEC'
 
 
@@ -53,9 +54,175 @@ call sign_define(s:sign_nextexec_name,
             \ 'text': s:sign_nextexec_text})
 
 
+" ============================================================================
+" COMMANDS FOR USERS
+" ============================================================================
+
+command! OTRun call octavetui#DBRun(1)
+command! OTRunStacked call octavetui#DBRun(0)
+command! OTSetBreakpoint call octavetui#SetBreakpoint()
+command! OTDelBreakpoint call octavetui#DelBreakpoint()
+command! OTNext call octavetui#DBStep('')
+command! OTStepIn call octavetui#DBStep('in')
+command! OTStepOut call octavetui#DBStep('out')
+command! OTQuit call octavetui#DBQuit('all')
+command! OTQuitStacked call octavetui#DBQuit('')
+
+
+" ============================================================================
+" PUBLIC FUNCTIONS
+" ============================================================================
+
+function! octavetui#StartTui() abort
+    call s:Init()
+    call octavetui#StartVarExp()
+    call octavetui#StartCli()
+endfunction
+
+function! octavetui#StopTui() abort
+    let l:cmd_octave_quit = 'exit'
+    let l:cmd_shell_quit = 'exit'
+    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd_octave_quit."\<CR>")
+    call term_sendkeys(s:cli_bufnr, l:cmd_shell_quit."\<CR>")
+
+    sleep 500m
+    exec 'bdelete' . s:cli_bufnr
+    exec 'bdelete' . s:vexp_bufnr
+
+    call sign_unplace(s:sign_nextexec_group)
+    call sign_unplace(s:sign_breakpoint_group)
+endfunction
+
+" set up keymap for current buffer
+" TODO: let user customize keymap
+function! octavetui#SetKeymap() abort
+    nnoremap <buffer> <silent> b :OTSetBreakpoint<CR>
+    nnoremap <buffer> <silent> B :OTDelBreakpoint<CR>
+    nnoremap <buffer> <silent> n :OTNext<CR>
+    nnoremap <buffer> <silent> s :OTStepIn<CR>
+    nnoremap <buffer> <silent> S :OTStepOut<CR>
+    nnoremap <buffer> <silent> r :OTRun<CR>
+    nnoremap <buffer> <silent> R :OTRunStacked<CR>
+    nnoremap <buffer> <silent> q :OTQuit<CR>
+    nnoremap <buffer> <silent> Q :OTQuitStacked<CR>
+endfunction
+
+" unset keymap for current buffer
+" TODO: original keymap is lost
+function! octavetui#UnsetKeymap() abort
+    silent! nunmap <buffer> b
+    silent! nunmap <buffer> B
+    silent! nunmap <buffer> n
+    silent! nunmap <buffer> s
+    silent! nunmap <buffer> S
+    silent! nunmap <buffer> r
+    silent! nunmap <buffer> R
+    silent! nunmap <buffer> q
+    silent! nunmap <buffer> Q
+endfunction
+
+function! octavetui#StartCli() abort
+
+    let l:cli_envs = {
+                \ s:envvar_history: s:tmpfile_history,
+                \ s:envvar_history_num: s:history_num,
+                \ s:envvar_variable: s:tmpfile_variable,
+                \ s:envvar_breakpoint: s:tmpfile_breakpoint,
+                \ s:envvar_nextexec: s:tmpfile_nextexec,
+                \ }
+
+    let l:cli_start_options = {
+                \ "env": l:cli_envs,
+                \ "term_kill": "term",
+                \ "term_name": s:cli_buf_name,
+                \ }
+
+    let l:cli_start_cmd = [g:octavetui_octave_path, '--path', s:octave_script_dir]
+
+    let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
+    let s:cli_winid = win_getid()
+
+    tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>Update()<CR>
+endfunction
+
+function! octavetui#StartVarExp() abort
+    let s:vexp_bufnr = bufadd(s:vexp_buf_name)
+    call setbufvar(s:vexp_bufnr, '&buftype', 'nofile')
+    call bufload(s:vexp_bufnr)
+    exec 'botright vertical sbuffer' . s:vexp_bufnr
+
+    setlocal nonumber
+    setlocal norelativenumber
+    let s:vexp_winid = win_getid()
+endfunction
+
+function! octavetui#SetBreakpoint() abort
+    let l:octave_filename = expand('%:t')
+    let l:line_num = line('.')
+    let l:cmd = "octavetui_toggle_breakpoint set '".l:octave_filename."' ".l:line_num
+    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
+    call timer_start(s:callback_check_interval,
+                \ function('s:UpdateBreakpoint', []),
+                \ {'repeat': -1})
+endfunction
+
+function! octavetui#DelBreakpoint() abort
+    let l:octave_filename = expand('%:t')
+    let l:line_num = line('.')
+    let l:cmd = "octavetui_toggle_breakpoint del '".l:octave_filename."' ".l:line_num
+    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
+    call timer_start(s:callback_check_interval,
+                \ function('s:UpdateBreakpoint', []),
+                \ {'repeat': -1})
+endfunction
+
+function! octavetui#Refresh() abort
+    call s:Update()
+endfunction
+
+function! octavetui#ExecCmd(cmd) abort
+    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".a:cmd."\<CR>")
+    call s:Update()
+endfunction
+
+function! octavetui#DBQuit(arguments) abort
+    let l:cmd = 'dbquit ' . a:arguments
+    call octavetui#ExecCmd(l:cmd)
+endfunction
+
+function! octavetui#DBRun(quit_before_run) abort
+    if a:quit_before_run
+        call octavetui#DBQuit('all')
+    endif
+    let l:main_buf_file = expand('#'.winbufnr(s:main_winid).':p')
+    let l:cmd = 'run '.l:main_buf_file
+    call octavetui#ExecCmd(l:cmd)
+endfunction
+
+function! octavetui#DBStep(arguments) abort
+    let l:cmd = 'dbstep ' . a:arguments
+    call octavetui#ExecCmd(l:cmd)
+endfunction
+
+
+" ============================================================================
+" PRIVATE FUNCTIONS
+" ============================================================================
+
 function! s:Init() abort
     call s:RemoveTmpFile()
     let s:main_winid = win_getid()
+
+    call octavetui#SetKeymap()
+    augroup octavetui
+        autocmd!
+        autocmd! BufEnter *.m,*.oct
+                    \ if win_getid() == s:main_winid |
+                    \ call octavetui#SetKeymap() |
+                    \ else |
+                    \ call octavetui#UnsetKeymap() |
+                    \ endif
+    augroup END
 endfunction
 
 function! s:Update() abort
@@ -159,6 +326,7 @@ function! s:UpdateNextexec(timerid) abort
         if len(l:nextexec) == 1
             let l:info = split(l:nextexec[0], '\t')
             if len(l:info) == 2
+                let l:old_winid = win_getid()
                 " jump to code file and code line
                 let l:codeline = l:info[0]
                 let l:codefile = l:info[1]
@@ -171,7 +339,7 @@ function! s:UpdateNextexec(timerid) abort
                 endif
                 " center the code line
                 normal! zz
-                call win_gotoid(s:cli_winid)
+                call win_gotoid(l:old_winid)
 
                 let l:sign_dict = {
                             \ 'group': s:sign_nextexec_group,
@@ -186,81 +354,4 @@ function! s:UpdateNextexec(timerid) abort
         endif
         call delete(s:tmpfile_nextexec)
     endif
-endfunction
-
-function! octavetui#StartCli() abort
-
-    let l:cli_envs = {
-                \ s:envvar_history: s:tmpfile_history,
-                \ s:envvar_history_num: s:history_num,
-                \ s:envvar_variable: s:tmpfile_variable,
-                \ s:envvar_breakpoint: s:tmpfile_breakpoint,
-                \ s:envvar_nextexec: s:tmpfile_nextexec,
-                \ }
-
-    let l:cli_start_options = {
-                \ "env": l:cli_envs,
-                \ "term_kill": "term",
-                \ "term_name": s:cli_buf_name,
-                \ }
-
-    let l:cli_start_cmd = [g:octavetui_octave_path, '--path', s:autoload_root]
-
-    let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
-    let s:cli_winid = win_getid()
-
-    tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>Update()<CR>
-endfunction
-
-function! octavetui#QuitCli() abort
-    let l:cmd_octave_quit = 'exit'
-    let l:cmd_shell_quit = 'exit'
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd_octave_quit."\<CR>")
-    call term_sendkeys(s:cli_bufnr, l:cmd_shell_quit."\<CR>")
-    sleep 500m
-    exec 'bdelete' . s:cli_bufnr
-endfunction
-
-function! octavetui#StartVarExp() abort
-    let s:vexp_bufnr = bufadd(s:vexp_buf_name)
-    call setbufvar(s:vexp_bufnr, '&buftype', 'nofile')
-    call bufload(s:vexp_bufnr)
-    exec 'botright vertical sbuffer' . s:vexp_bufnr
-
-    setlocal nonumber
-    setlocal norelativenumber
-    let s:vexp_winid = win_getid()
-endfunction
-
-function! octavetui#SetBreakpoint() abort
-    let l:octave_filename = expand('%:t')
-    let l:line_num = line('.')
-    let l:cmd = "octavetui_toggle_breakpoint set '".l:octave_filename."' ".l:line_num
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
-    call timer_start(s:callback_check_interval,
-                \ function('s:UpdateBreakpoint', []),
-                \ {'repeat': -1})
-endfunction
-
-function! octavetui#UnsetBreakpoint() abort
-    let l:octave_filename = expand('%:t')
-    let l:line_num = line('.')
-    let l:cmd = "octavetui_toggle_breakpoint unset '".l:octave_filename."' ".l:line_num
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
-    call timer_start(s:callback_check_interval,
-                \ function('s:UpdateBreakpoint', []),
-                \ {'repeat': -1})
-endfunction
-
-function! octavetui#RefreshAll() abort
-    call s:Update()
-endfunction
-
-function! octavetui#StartAll() abort
-    call s:Init()
-    call octavetui#StartVarExp()
-    call octavetui#StartCli()
-    nnoremap <silent> <C-q> :call octavetui#QuitCli()<CR>
-    nnoremap <silent> <C-b> :call octavetui#SetBreakpoint()<CR>
-    nnoremap <silent> <M-b> :call octavetui#UnsetBreakpoint()<CR>
 endfunction

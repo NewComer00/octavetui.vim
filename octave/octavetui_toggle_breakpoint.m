@@ -3,7 +3,7 @@ function octavetui_toggle_breakpoint(operation, filename, linenum_str)
 
     if strcmp(operation, 'set')
         dbstop(filename, linenum_str);
-    elseif strcmp(operation, 'unset')
+    elseif strcmp(operation, 'del')
         dbclear(filename, linenum_str);
     end
 
