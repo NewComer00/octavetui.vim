@@ -10,11 +10,21 @@ endif
 let g:loaded_octavetui = 1
 
 if has('win32')
-    let s:default_octave_executable = 'octave.bat'
+    let g:octavetui_octave_executable = get(g:, 'octavetui_octave_executable', 'octave.bat')
 else
-    let s:default_octave_executable = 'octave'
+    let g:octavetui_octave_executable = get(g:, 'octavetui_octave_executable', 'octave')
 endif
-let g:octavetui_octave_path= get(g:, 'octavetui_octave_path', s:default_octave_executable)
+let g:octavetui_callback_interval = get(g:, 'octavetui_callback_interval', 50)
+let g:octavetui_history_number = get(g:, 'octavetui_history_number', 20)
 
-command! OTUIStart call octavetui#StartTui()
-command! OTUIStop call octavetui#StopTui()
+let g:octavetui_breakpoint_symbol = get(g:, 'octavetui_breakpoint_symbol', '🔴')
+let g:octavetui_breakpoint_hlcolor = get(g:, 'octavetui_breakpoint_hlcolor', 'darkblue')
+let g:octavetui_breakpoint_priority = get(g:, 'octavetui_breakpoint_priority', 100)
+
+let g:octavetui_nextexec_symbol = get(g:, 'octavetui_nextexec_symbol', '⏩')
+let g:octavetui_nextexec_hlcolor = get(g:, 'octavetui_nextexec_hlcolor', 'darkgreen')
+let g:octavetui_nextexec_priority = get(g:, 'octavetui_nextexec_priority', 101)
+
+
+command! OctaveTUIStart call octavetui#StartTUI()
+command! OctaveTUIStop call octavetui#StopTUI()

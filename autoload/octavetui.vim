@@ -1,8 +1,9 @@
 let s:plugin_root = fnamemodify(resolve(expand('<sfile>:p')), ':h:h')
 let s:octave_script_dir = s:plugin_root . '/octave'
 
-let s:callback_check_interval = 50
-let s:history_num = 20
+let s:octave_executable = g:octavetui_octave_executable
+let s:callback_check_interval = g:octavetui_callback_interval
+let s:history_num = g:octavetui_history_number
 
 let s:main_winid = ''
 let s:cli_buf_name = 'Octave CLI'
@@ -24,7 +25,7 @@ let s:envvar_nextexec = 'OCTAVETUI_NEXTEXEC'
 
 
 let s:highlight_breakpoint_name = 'octavetui_hl_breakpoint'
-let s:highlight_breakpoint_color = 'darkblue'
+let s:highlight_breakpoint_color = g:octavetui_breakpoint_hlcolor
 call hlset([{'name': s:highlight_breakpoint_name,
             \ 'ctermbg': s:highlight_breakpoint_color,
             \ 'guibg': s:highlight_breakpoint_color,
@@ -32,14 +33,16 @@ call hlset([{'name': s:highlight_breakpoint_name,
 let s:sign_breakpoint_name = 'octavetui_sign_breakpoint'
 let s:sign_breakpoint_group = s:sign_breakpoint_name
 let s:sign_breakpoint_hl = s:highlight_breakpoint_name
-let s:sign_breakpoint_text = '🔴'
-let s:sign_breakpoint_priority = 100
+let s:sign_breakpoint_text = g:octavetui_breakpoint_symbol
+let s:sign_breakpoint_priority = g:octavetui_breakpoint_priority
 call sign_define(s:sign_breakpoint_name,
             \ {'linehl': s:sign_breakpoint_hl,
-            \ 'text': s:sign_breakpoint_text})
+            \ 'text': s:sign_breakpoint_text,
+            \ 'texthl': 'SignColumn',
+            \ })
 
 let s:highlight_nextexec_name = 'octavetui_hl_nextexec'
-let s:highlight_nextexec_color = 'darkgreen'
+let s:highlight_nextexec_color = g:octavetui_nextexec_hlcolor
 call hlset([{'name': s:highlight_nextexec_name,
             \ 'ctermbg': s:highlight_nextexec_color,
             \ 'guibg': s:highlight_nextexec_color,
@@ -47,43 +50,45 @@ call hlset([{'name': s:highlight_nextexec_name,
 let s:sign_nextexec_name = 'octavetui_sign_nextexec'
 let s:sign_nextexec_group = s:sign_nextexec_name
 let s:sign_nextexec_hl = s:highlight_nextexec_name
-let s:sign_nextexec_text = '⏩'
-let s:sign_nextexec_priority = s:sign_breakpoint_priority + 1
+let s:sign_nextexec_text = g:octavetui_nextexec_symbol
+let s:sign_nextexec_priority = g:octavetui_nextexec_priority
 call sign_define(s:sign_nextexec_name,
             \ {'linehl': s:sign_nextexec_hl,
-            \ 'text': s:sign_nextexec_text})
+            \ 'text': s:sign_nextexec_text,
+            \ 'texthl': 'SignColumn',
+            \ })
 
 
 " ============================================================================
 " COMMANDS FOR USERS
 " ============================================================================
 
-command! OTActivateKeymap call octavetui#SetKeymap()
-command! OTDeactivateKeymap call octavetui#UnsetKeymap()
+command! OctaveTUIActivateKeymap call octavetui#SetKeymap()
+command! OctaveTUIDeactivateKeymap call octavetui#UnsetKeymap()
 
-command! OTRun call octavetui#DBRun(1)
-command! OTRunStacked call octavetui#DBRun(0)
-command! OTSetBreakpoint call octavetui#SetBreakpoint()
-command! OTDelBreakpoint call octavetui#DelBreakpoint()
-command! OTNext call octavetui#DBStep('')
-command! OTStepIn call octavetui#DBStep('in')
-command! OTStepOut call octavetui#DBStep('out')
-command! OTQuit call octavetui#DBQuit('all')
-command! OTQuitStacked call octavetui#DBQuit('')
-command! OTContinue call octavetui#DBContinue()
+command! OctaveTUIRun call octavetui#DBRun(1)
+command! OctaveTUIRunStacked call octavetui#DBRun(0)
+command! OctaveTUISetBreakpoint call octavetui#SetBreakpoint()
+command! OctaveTUIDelBreakpoint call octavetui#DelBreakpoint()
+command! OctaveTUINext call octavetui#DBStep('')
+command! OctaveTUIStepIn call octavetui#DBStep('in')
+command! OctaveTUIStepOut call octavetui#DBStep('out')
+command! OctaveTUIQuit call octavetui#DBQuit('all')
+command! OctaveTUIQuitStacked call octavetui#DBQuit('')
+command! OctaveTUIContinue call octavetui#DBContinue()
 
 
 " ============================================================================
 " PUBLIC FUNCTIONS
 " ============================================================================
 
-function! octavetui#StartTui() abort
+function! octavetui#StartTUI() abort
     call s:Init()
     call octavetui#StartVarExp()
     call octavetui#StartCli()
 endfunction
 
-function! octavetui#StopTui() abort
+function! octavetui#StopTUI() abort
     let l:cmd_octave_quit = 'exit'
     call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd_octave_quit."\<CR>")
 
@@ -98,16 +103,16 @@ endfunction
 " set up keymap for current buffer
 " TODO: let user customize keymap
 function! octavetui#SetKeymap() abort
-    nnoremap <buffer> <silent> b :OTSetBreakpoint<CR>
-    nnoremap <buffer> <silent> B :OTDelBreakpoint<CR>
-    nnoremap <buffer> <silent> n :OTNext<CR>
-    nnoremap <buffer> <silent> s :OTStepIn<CR>
-    nnoremap <buffer> <silent> S :OTStepOut<CR>
-    nnoremap <buffer> <silent> r :OTRun<CR>
-    nnoremap <buffer> <silent> R :OTRunStacked<CR>
-    nnoremap <buffer> <silent> q :OTQuit<CR>
-    nnoremap <buffer> <silent> Q :OTQuitStacked<CR>
-    nnoremap <buffer> <silent> c :OTContinue<CR>
+    nnoremap <buffer> <silent> b :OctaveTUISetBreakpoint<CR>
+    nnoremap <buffer> <silent> B :OctaveTUIDelBreakpoint<CR>
+    nnoremap <buffer> <silent> n :OctaveTUINext<CR>
+    nnoremap <buffer> <silent> s :OctaveTUIStepIn<CR>
+    nnoremap <buffer> <silent> S :OctaveTUIStepOut<CR>
+    nnoremap <buffer> <silent> r :OctaveTUIRun<CR>
+    nnoremap <buffer> <silent> R :OctaveTUIRunStacked<CR>
+    nnoremap <buffer> <silent> q :OctaveTUIQuit<CR>
+    nnoremap <buffer> <silent> Q :OctaveTUIQuitStacked<CR>
+    nnoremap <buffer> <silent> c :OctaveTUIContinue<CR>
 endfunction
 
 " unset keymap for current buffer
@@ -141,7 +146,7 @@ function! octavetui#StartCli() abort
                 \ "term_name": s:cli_buf_name,
                 \ }
 
-    let l:cli_start_cmd = [g:octavetui_octave_path, '--path', s:octave_script_dir]
+    let l:cli_start_cmd = [s:octave_executable, '--path', s:octave_script_dir]
 
     let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
     let s:cli_winid = win_getid()
