@@ -1,4 +1,12 @@
 # octavetui.vim [ ⚒Under Development ... ]
+```
+    _--`_        ___     _                     _____        _____
+  _//  |█|      /___\___| |_ __ ___   _____   /__   \/\ /\  \_   \
+ |█|  \─| ─┐   //  // __| __/ _` \ \ / / _ \    / /\/ / \ \  / /\/
+   \\ _`\\||  / \_/| (__| || (_| |\ V |  __/   / /  \ \_/ /\/ /_
+   `-|█| \\|  \___/ \___|\__\__,_| \_/ \___|   \/    \___/\____/
+```
+
 This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octave.
 
 - [x] Support for Vim
