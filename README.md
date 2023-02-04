@@ -32,7 +32,8 @@ Frist, open an Octave code file with Vim. Then type the command below to start t
 :OctaveTUIStart
 ```
 
-Once the TUI is started, the current Vim tab will be divided into three windows -- the **code buffer** window, the **variable explorer** window and the **Octave CLI** window.  
+Once the TUI is started, the current Vim tab will be divided into three windows -- the **code buffer** window, the **variable explorer** window and the **Octave CLI** window.
+
 **NOTE:** The TUI only takes control of the **current tab**. You can create a new tab with command `:tabnew` to edit other files.
 
 If you need to exit the TUI, please type the command below.
@@ -55,3 +56,14 @@ Commands                  | Hotkeys
 `:OctaveTUIQuit`          | `q`
 `:OctaveTUIQuitStacked`   | `Q`
 `:OctaveTUIContinue`      | `c`
+
+## Tips
+### Customizing the prompt of the Octave CLI
+Please refer to this [documentation](https://docs.octave.org/latest/Customizing-the-Prompt.html). For example, you can create a personal config file `~/.octaverc` and place the following command in it:
+```
+% using ANSI escape sequences for the colorful prompt
+PS1('\[\033[01;31m\]octave:\#> \[\033[0m\]');
+```
+Now open the Octave CLI application (or start this plugin in Vim). You will get the prompt displayed in **red**.
+
+**NOTE:** ANSI escape sequences are supported by `windows cmd` on Windows 10 and above, but you need to manually enable it. Run `regedit`; go to the path `HKEY_CURRENT_USER\Console` and create a DWORD item named `VirtualTerminalLevel` with the value of `1`. Now your `windows cmd` should be able to display the colored text. [Ref. 1](https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences) [Ref. 2](https://ss64.com/nt/syntax-ansi.html)
