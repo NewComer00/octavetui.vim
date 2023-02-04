@@ -14,7 +14,7 @@ if has('win32')
 else
     let g:octavetui_octave_executable = get(g:, 'octavetui_octave_executable', 'octave')
 endif
-let g:octavetui_callback_interval = get(g:, 'octavetui_callback_interval', 50)
+let g:octavetui_callback_interval = get(g:, 'octavetui_callback_interval', 100)
 let g:octavetui_history_number = get(g:, 'octavetui_history_number', 20)
 
 let g:octavetui_breakpoint_symbol = get(g:, 'octavetui_breakpoint_symbol', '🔴')

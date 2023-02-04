@@ -63,19 +63,37 @@ call sign_define(s:sign_nextexec_name,
 " COMMANDS FOR USERS
 " ============================================================================
 
-command! OctaveTUIActivateKeymap call octavetui#SetKeymap()
-command! OctaveTUIDeactivateKeymap call octavetui#UnsetKeymap()
+function! s:SetPluginCommand() abort
+    command! OctaveTUIActivateKeymap call octavetui#SetKeymap()
+    command! OctaveTUIDeactivateKeymap call octavetui#DelKeymap()
 
-command! OctaveTUIRun call octavetui#DBRun(1)
-command! OctaveTUIRunStacked call octavetui#DBRun(0)
-command! OctaveTUISetBreakpoint call octavetui#SetBreakpoint()
-command! OctaveTUIDelBreakpoint call octavetui#DelBreakpoint()
-command! OctaveTUINext call octavetui#DBStep('')
-command! OctaveTUIStepIn call octavetui#DBStep('in')
-command! OctaveTUIStepOut call octavetui#DBStep('out')
-command! OctaveTUIQuit call octavetui#DBQuit('all')
-command! OctaveTUIQuitStacked call octavetui#DBQuit('')
-command! OctaveTUIContinue call octavetui#DBContinue()
+    command! OctaveTUIRun call octavetui#DBRun(1)
+    command! OctaveTUIRunStacked call octavetui#DBRun(0)
+    command! OctaveTUISetBreakpoint call octavetui#SetBreakpoint()
+    command! OctaveTUIDelBreakpoint call octavetui#DelBreakpoint()
+    command! OctaveTUINext call octavetui#DBStep('')
+    command! OctaveTUIStepIn call octavetui#DBStep('in')
+    command! OctaveTUIStepOut call octavetui#DBStep('out')
+    command! OctaveTUIQuit call octavetui#DBQuit('all')
+    command! OctaveTUIQuitStacked call octavetui#DBQuit('')
+    command! OctaveTUIContinue call octavetui#DBContinue()
+endfunction
+
+function! s:DelPluginCommand() abort
+    delcommand OctaveTUIActivateKeymap
+    delcommand OctaveTUIDeactivateKeymap
+
+    delcommand OctaveTUIRun
+    delcommand OctaveTUIRunStacked
+    delcommand OctaveTUISetBreakpoint
+    delcommand OctaveTUIDelBreakpoint
+    delcommand OctaveTUINext
+    delcommand OctaveTUIStepIn
+    delcommand OctaveTUIStepOut
+    delcommand OctaveTUIQuit
+    delcommand OctaveTUIQuitStacked
+    delcommand OctaveTUIContinue
+endfunction
 
 
 " ============================================================================
@@ -89,15 +107,9 @@ function! octavetui#StartTUI() abort
 endfunction
 
 function! octavetui#StopTUI() abort
-    let l:cmd_octave_quit = 'exit'
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd_octave_quit."\<CR>")
-
-    sleep 500m
-    exec 'bdelete' . s:cli_bufnr
-    exec 'bdelete' . s:vexp_bufnr
-
-    call sign_unplace(s:sign_nextexec_group)
-    call sign_unplace(s:sign_breakpoint_group)
+    call s:Deinit()
+    call octavetui#StopVarExp()
+    call octavetui#StopCli()
 endfunction
 
 " set up keymap for current buffer
@@ -117,7 +129,7 @@ endfunction
 
 " unset keymap for current buffer
 " TODO: original keymap is lost
-function! octavetui#UnsetKeymap() abort
+function! octavetui#DelKeymap() abort
     silent! nunmap <buffer> b
     silent! nunmap <buffer> B
     silent! nunmap <buffer> n
@@ -141,9 +153,10 @@ function! octavetui#StartCli() abort
                 \ }
 
     let l:cli_start_options = {
-                \ "env": l:cli_envs,
-                \ "term_kill": "term",
-                \ "term_name": s:cli_buf_name,
+                \ 'env': l:cli_envs,
+                \ 'term_kill': 'term',
+                \ 'term_name': s:cli_buf_name,
+                \ 'term_finish': 'close',
                 \ }
 
     let l:cli_start_cmd = [s:octave_executable, '--path', s:octave_script_dir]
@@ -152,6 +165,11 @@ function! octavetui#StartCli() abort
     let s:cli_winid = win_getid()
 
     tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>Update()<CR>
+endfunction
+
+function! octavetui#StopCli() abort
+    let l:cmd_octave_quit = 'exit'
+    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd_octave_quit."\<CR>")
 endfunction
 
 function! octavetui#StartVarExp() abort
@@ -163,6 +181,10 @@ function! octavetui#StartVarExp() abort
     setlocal nonumber
     setlocal norelativenumber
     let s:vexp_winid = win_getid()
+endfunction
+
+function! octavetui#StopVarExp() abort
+    exec 'bdelete' . s:vexp_bufnr
 endfunction
 
 function! octavetui#SetBreakpoint() abort
@@ -227,16 +249,37 @@ function! s:Init() abort
     call s:RemoveTmpFile()
     let s:main_winid = win_getid()
 
+    call s:SetPluginCommand()
     call octavetui#SetKeymap()
+
     augroup octavetui
         autocmd!
         autocmd! BufEnter *.m,*.oct
                     \ if win_getid() == s:main_winid |
                     \ call octavetui#SetKeymap() |
                     \ else |
-                    \ call octavetui#UnsetKeymap() |
+                    \ call octavetui#DelKeymap() |
+                    \ endif
+        autocmd! TabEnter *
+                    \ if win_getid() == s:main_winid |
+                    \ call octavetui#SetKeymap() |
+                    \ else |
+                    \ call octavetui#DelKeymap() |
                     \ endif
     augroup END
+endfunction
+
+function! s:Deinit() abort
+    augroup octavetui
+        autocmd!
+    augroup END
+
+    call win_gotoid(s:main_winid)
+    call octavetui#DelKeymap()
+    call s:DelPluginCommand()
+
+    call sign_unplace(s:sign_nextexec_group)
+    call sign_unplace(s:sign_breakpoint_group)
 endfunction
 
 function! s:Update() abort
