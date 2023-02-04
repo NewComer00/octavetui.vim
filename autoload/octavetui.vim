@@ -5,6 +5,9 @@ let s:octave_executable = g:octavetui_octave_executable
 let s:callback_check_interval = g:octavetui_callback_interval
 let s:history_num = g:octavetui_history_number
 
+let s:welcome_text_file = s:plugin_root . '/welcome.txt'
+let s:enable_welcome_text = g:enable_welcome_text
+
 let s:main_winid = ''
 let s:cli_buf_name = 'Octave CLI'
 let s:cli_bufnr = ''
@@ -64,6 +67,8 @@ call sign_define(s:sign_nextexec_name,
 " ============================================================================
 
 function! s:SetPluginCommand() abort
+    command! OctaveTUIStop call octavetui#StopTUI()
+
     command! OctaveTUIActivateKeymap call octavetui#SetKeymap()
     command! OctaveTUIDeactivateKeymap call octavetui#DelKeymap()
 
@@ -80,6 +85,8 @@ function! s:SetPluginCommand() abort
 endfunction
 
 function! s:DelPluginCommand() abort
+    delcommand OctaveTUIStop
+
     delcommand OctaveTUIActivateKeymap
     delcommand OctaveTUIDeactivateKeymap
 
@@ -97,20 +104,8 @@ endfunction
 
 
 " ============================================================================
-" PUBLIC FUNCTIONS
+" KEYMAPS FOR USERS
 " ============================================================================
-
-function! octavetui#StartTUI() abort
-    call s:Init()
-    call octavetui#StartVarExp()
-    call octavetui#StartCli()
-endfunction
-
-function! octavetui#StopTUI() abort
-    call s:Deinit()
-    call octavetui#StopVarExp()
-    call octavetui#StopCli()
-endfunction
 
 " set up keymap for current buffer
 " TODO: let user customize keymap
@@ -142,8 +137,24 @@ function! octavetui#DelKeymap() abort
     silent! nunmap <buffer> c
 endfunction
 
-function! octavetui#StartCli() abort
 
+" ============================================================================
+" PUBLIC FUNCTIONS
+" ============================================================================
+
+function! octavetui#StartTUI() abort
+    call s:Init()
+    call octavetui#StartVarExp()
+    call octavetui#StartCli()
+endfunction
+
+function! octavetui#StopTUI() abort
+    call s:Deinit()
+    call octavetui#StopVarExp()
+    call octavetui#StopCli()
+endfunction
+
+function! octavetui#StartCli() abort
     let l:cli_envs = {
                 \ s:envvar_history: s:tmpfile_history,
                 \ s:envvar_history_num: s:history_num,
@@ -178,9 +189,15 @@ function! octavetui#StartVarExp() abort
     call bufload(s:vexp_bufnr)
     exec 'botright vertical sbuffer' . s:vexp_bufnr
 
+    setlocal nowrap
+    setlocal nolist
     setlocal nonumber
     setlocal norelativenumber
     let s:vexp_winid = win_getid()
+
+    if s:enable_welcome_text
+        call s:DisplayWelcomeText()
+    endif
 endfunction
 
 function! octavetui#StopVarExp() abort
@@ -423,4 +440,8 @@ function! s:UpdateNextexec(timerid) abort
         endif
         call delete(s:tmpfile_nextexec)
     endif
+endfunction
+
+function! s:DisplayWelcomeText() abort
+        call setbufline(s:vexp_bufnr, 1, readfile(s:welcome_text_file))
 endfunction

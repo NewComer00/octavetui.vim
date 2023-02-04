@@ -7,6 +7,10 @@
 if exists('g:loaded_octavetui')
     finish
 endif
+if v:version < 802
+    echoerr "OctaveTUI: this plugin requires vim >= 8.2."
+    finish
+endif
 let g:loaded_octavetui = 1
 
 if has('win32')
@@ -16,6 +20,7 @@ else
 endif
 let g:octavetui_callback_interval = get(g:, 'octavetui_callback_interval', 100)
 let g:octavetui_history_number = get(g:, 'octavetui_history_number', 20)
+let g:enable_welcome_text = get(g:, 'enable_welcome_text', 1)
 
 let g:octavetui_breakpoint_symbol = get(g:, 'octavetui_breakpoint_symbol', '🔴')
 let g:octavetui_breakpoint_hlcolor = get(g:, 'octavetui_breakpoint_hlcolor', 'darkblue')
@@ -27,4 +32,3 @@ let g:octavetui_nextexec_priority = get(g:, 'octavetui_nextexec_priority', 101)
 
 
 command! OctaveTUIStart call octavetui#StartTUI()
-command! OctaveTUIStop call octavetui#StopTUI()
