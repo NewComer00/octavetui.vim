@@ -1,10 +1,11 @@
 # octavetui.vim [ ⚒Under Development ... ]
 ```
-    _--`_              ___     _                     _____        _____
-  _//  |█|            /___\___| |_ __ ___   _____   /__   \/\ /\  \_   \
- |█|  \─| ─┐         //  // __| __/ _` \ \ / / _ \    / /\/ / \ \  / /\/
-   \\ _`\\||        / \_/| (__| || (_| |\ V |  __/   / /  \ \_/ /\/ /_                P.S. These art letters are generated on http://patorjk.com/software/taag/
-   `-|█| \\|        \___/ \___|\__\__,_| \_/ \___|   \/    \___/\____/                        But the icon is designed by myself ;)
+     _──,_           ___     _                     _____        _____
+   _//¯¯|_|         /___\___| |_ __ ___   _____   /__   \/\ /\  \_   \
+  |_|  \─┴┐─┐      //  // __| __/ _` \ \ / / _ \    / /\/ / \ \  / /\/
+    \\ _`\\||     / \_/| (__| || (_| |\ V |  __/   / /  \ \_/ /\/ /_
+     -|_|´\\|     \___/ \___|\__\__,_| \_/ \___|   \/    \___/\____/
+           ¯´
 ```
 
 This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octave.
@@ -67,3 +68,6 @@ PS1('\[\033[01;31m\]octave:\#> \[\033[0m\]');
 Now open the Octave CLI application (or start this plugin in Vim). You will get the prompt displayed in **red**.
 
 **NOTE:** ANSI escape sequences are supported by `windows cmd` on Windows 10 and above, but you need to manually enable it. Run `regedit`; go to the path `HKEY_CURRENT_USER\Console` and create a DWORD item named `VirtualTerminalLevel` with the value of `1`. Now your `windows cmd` should be able to display the colored text. [Ref. 1](https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences) [Ref. 2](https://ss64.com/nt/syntax-ansi.html)
+
+## About
+The ASCII art letters are generated on the website http://patorjk.com/software/taag/ .

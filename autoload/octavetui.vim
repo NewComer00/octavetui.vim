@@ -443,5 +443,17 @@ function! s:UpdateNextexec(timerid) abort
 endfunction
 
 function! s:DisplayWelcomeText() abort
-        call setbufline(s:vexp_bufnr, 1, readfile(s:welcome_text_file))
+        let l:welcome_text = readfile(s:welcome_text_file)
+
+        let l:vexp_height = winheight(s:vexp_bufnr)
+        let l:padding_vertical = repeat([''], l:vexp_height/2)
+        call setbufline(s:vexp_bufnr, 1,
+                    \ l:padding_vertical
+                    \ + l:welcome_text
+                    \ + l:padding_vertical
+                    \ )
+
+        let l:init_line = len(l:welcome_text)/2 + l:vexp_height/2
+        exec ':' . l:init_line
+        normal! zz
 endfunction
