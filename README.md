@@ -18,6 +18,8 @@ You can use any conventional plugin manager for Vim, such as [vim-plug](https://
 ```vim
 Plug 'NewComer00/octavetui.vim', {'branch': 'main'}
 ```
+**🟨 IMPORTANT:** The GNU Octave package provided by `snap` [does not](https://askubuntu.com/questions/1238211/how-to-make-snaps-access-hidden-files-and-folders-in-home) have access to the hidden files and dirs placed in `$HOME` directory (for example, `~/.vim/`). This plugin will not work normally if its installation path is not accessible to Octave. To solve this problem, you can specify a different Vim plugin installation path, or you can reinstall the GNU Octave package by another package manager like `apt`.
+
 
 ## Features
 - [x] Variable explorer
