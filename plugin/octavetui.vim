@@ -31,5 +31,7 @@ let g:octavetui_nextexec_symbol = get(g:, 'octavetui_nextexec_symbol', '⏩')
 let g:octavetui_nextexec_hlcolor = get(g:, 'octavetui_nextexec_hlcolor', 'darkgreen')
 let g:octavetui_nextexec_priority = get(g:, 'octavetui_nextexec_priority', 101)
 
+let g:octavetui_watch_symbol = get(g:, 'octavetui_watch_symbol', '📌')
+let g:octavetui_watch_priority = get(g:, 'octavetui_watch_priority', 100)
 
 command! OctaveTUIStart call octavetui#StartTUI()

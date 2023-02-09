@@ -28,6 +28,8 @@ let s:envvar_breakpoint = 'OCTAVETUI_BREAKPOINT'
 let s:tmpfile_nextexec = tempname()
 let s:envvar_nextexec = 'OCTAVETUI_NEXTEXEC'
 
+let s:vexp_watch_list = []
+
 
 let s:highlight_breakpoint_name = 'octavetui_hl_breakpoint'
 let s:highlight_breakpoint_color = g:octavetui_breakpoint_hlcolor
@@ -63,6 +65,16 @@ call sign_define(s:sign_nextexec_name,
             \ 'texthl': 'SignColumn',
             \ })
 
+let s:sign_watch_name = 'octavetui_sign_watch'
+let s:sign_watch_group = s:sign_watch_name
+let s:sign_watch_text = g:octavetui_watch_symbol
+let s:sign_watch_priority = g:octavetui_watch_priority
+call sign_define(s:sign_watch_name,
+            \ {'linehl': 'CursorLine',
+            \ 'text': s:sign_watch_text,
+            \ 'texthl': 'SignColumn',
+            \ })
+
 
 " ============================================================================
 " COMMANDS FOR USERS
@@ -70,9 +82,13 @@ call sign_define(s:sign_nextexec_name,
 
 function! s:SetPluginCommand() abort
     command! OctaveTUIStop call octavetui#StopTUI()
+    command! OctaveTUIRefresh call octavetui#Refresh()
 
-    command! OctaveTUIActivateKeymap call octavetui#SetKeymap()
-    command! OctaveTUIDeactivateKeymap call octavetui#DelKeymap()
+    command! OctaveTUIActivateKeymap call octavetui#SetMainKeymap()
+    command! OctaveTUIDeactivateKeymap call octavetui#DelMainKeymap()
+
+    command! OctaveTUIAddToWatch call octavetui#AddToWatch()
+    command! OctaveTUIRemoveFromWatch call octavetui#RemoveFromWatch()
 
     command! OctaveTUIRun call octavetui#DBRun(1)
     command! OctaveTUIRunStacked call octavetui#DBRun(0)
@@ -88,9 +104,13 @@ endfunction
 
 function! s:DelPluginCommand() abort
     delcommand OctaveTUIStop
+    delcommand OctaveTUIRefresh
 
     delcommand OctaveTUIActivateKeymap
     delcommand OctaveTUIDeactivateKeymap
+
+    delcommand OctaveTUIAddToWatch
+    delcommand OctaveTUIRemoveFromWatch
 
     delcommand OctaveTUIRun
     delcommand OctaveTUIRunStacked
@@ -109,9 +129,9 @@ endfunction
 " KEYMAPS FOR USERS
 " ============================================================================
 
-" set up keymap for current buffer
+" set up keymap for main code buffer
 " TODO: let user customize keymap
-function! octavetui#SetKeymap() abort
+function! octavetui#SetMainKeymap() abort
     nnoremap <buffer> <silent> b :OctaveTUISetBreakpoint<CR>
     nnoremap <buffer> <silent> B :OctaveTUIDelBreakpoint<CR>
     nnoremap <buffer> <silent> n :OctaveTUINext<CR>
@@ -124,9 +144,9 @@ function! octavetui#SetKeymap() abort
     nnoremap <buffer> <silent> c :OctaveTUIContinue<CR>
 endfunction
 
-" unset keymap for current buffer
+" unset keymap for main code buffer
 " TODO: original keymap is lost
-function! octavetui#DelKeymap() abort
+function! octavetui#DelMainKeymap() abort
     silent! nunmap <buffer> b
     silent! nunmap <buffer> B
     silent! nunmap <buffer> n
@@ -137,6 +157,20 @@ function! octavetui#DelKeymap() abort
     silent! nunmap <buffer> q
     silent! nunmap <buffer> Q
     silent! nunmap <buffer> c
+endfunction
+
+" set up keymap for variable explorer buffer
+" TODO: let user customize keymap
+function! octavetui#SetVexpKeymap() abort
+    nnoremap <buffer> <silent> p :OctaveTUIAddToWatch<CR>
+    nnoremap <buffer> <silent> P :OctaveTUIRemoveFromWatch<CR>
+endfunction
+
+" unset keymap for variable explorer buffer
+" TODO: let user customize keymap
+function! octavetui#DelVexpKeymap() abort
+    silent! nunmap <buffer> p
+    silent! nunmap <buffer> P
 endfunction
 
 
@@ -202,6 +236,8 @@ function! octavetui#StartVarExp() abort
         call s:DisplayWelcomeText()
     endif
 
+    call octavetui#SetVexpKeymap()
+
     syntax match Identifier "\v^[^\t]+\t"
     syntax match Number "\v\t[^\t]+$"
     syntax keyword Type double single int complex sparse char string logical
@@ -209,7 +245,38 @@ function! octavetui#StartVarExp() abort
 endfunction
 
 function! octavetui#StopVarExp() abort
+    call octavetui#DelVexpKeymap()
     exec 'bdelete' . s:vexp_bufnr
+endfunction
+
+function! octavetui#AddToWatch() abort
+    if bufnr() == s:vexp_bufnr
+        let l:cur_line = getline(line('.'))
+        let l:info = split(l:cur_line, '\t')
+        if len(l:info) >= 1
+            " might be some spaces around
+            let l:var_name = trim(l:info[0])
+            call add(s:vexp_watch_list, l:var_name)
+            call uniq(sort(s:vexp_watch_list))
+        endif
+    endif
+    call octavetui#Refresh()
+endfunction
+
+function! octavetui#RemoveFromWatch() abort
+    if bufnr() == s:vexp_bufnr
+        let l:cur_line = getline(line('.'))
+        let l:info = split(l:cur_line, '\t')
+        if len(l:info) >= 1
+            " might be some spaces around
+            let l:var_name = trim(l:info[0])
+            let l:idx = index(s:vexp_watch_list,l:var_name)
+            if l:idx != -1
+                call remove(s:vexp_watch_list, l:idx)
+            endif
+        endif
+    endif
+    call octavetui#Refresh()
 endfunction
 
 function! octavetui#SetBreakpoint() abort
@@ -275,21 +342,21 @@ function! s:Init() abort
     let s:main_winid = win_getid()
 
     call s:SetPluginCommand()
-    call octavetui#SetKeymap()
+    call octavetui#SetMainKeymap()
 
     augroup octavetui
         autocmd!
         autocmd! BufEnter *.m,*.oct
                     \ if win_getid() == s:main_winid |
-                    \ call octavetui#SetKeymap() |
+                    \ call octavetui#SetMainKeymap() |
                     \ else |
-                    \ call octavetui#DelKeymap() |
+                    \ call octavetui#DelMainKeymap() |
                     \ endif
         autocmd! TabEnter *
                     \ if win_getid() == s:main_winid |
-                    \ call octavetui#SetKeymap() |
+                    \ call octavetui#SetMainKeymap() |
                     \ else |
-                    \ call octavetui#DelKeymap() |
+                    \ call octavetui#DelMainKeymap() |
                     \ endif
     augroup END
 endfunction
@@ -300,7 +367,7 @@ function! s:Deinit() abort
     augroup END
 
     call win_gotoid(s:main_winid)
-    call octavetui#DelKeymap()
+    call octavetui#DelMainKeymap()
     call s:DelPluginCommand()
 
     call sign_unplace(s:sign_nextexec_group)
@@ -332,15 +399,6 @@ function! s:RemoveTmpFile() abort
     call delete(s:tmpfile_nextexec)
 endfunction
 
-function! s:UpdateVarExp(timerid) abort
-    if s:FileIsFree(s:tmpfile_variable)
-        call timer_stop(a:timerid)
-        call deletebufline(s:vexp_bufnr, 1, '$')
-        call setbufline(s:vexp_bufnr, 1, readfile(s:tmpfile_variable))
-        call delete(s:tmpfile_variable)
-    endif
-endfunction
-
 " if a file is readable, and it is not occupied by Octave fopen(...,'wt')
 function! s:FileIsFree(filename) abort
     if !filereadable(a:filename)
@@ -369,6 +427,67 @@ function! s:FileIsFree(filename) abort
             endif
         endif
     endif
+endfunction
+
+function! s:UpdateVarExp(timerid) abort
+    if s:FileIsFree(s:tmpfile_variable)
+        call timer_stop(a:timerid)
+        call sign_unplace(s:sign_watch_group,
+                    \ {'buffer': s:vexp_bufnr})
+        call deletebufline(s:vexp_bufnr, 1, '$')
+
+        let l:var_list = readfile(s:tmpfile_variable)
+        let [l:watched_var_list,
+                    \ l:unwatched_var_list,
+                    \ l:rest_watched_var_list] = s:UpdateWatch(l:var_list)
+        call setbufline(s:vexp_bufnr, 1,
+                \ l:watched_var_list
+                \ + l:rest_watched_var_list
+                \ + l:unwatched_var_list
+                \ )
+
+        let l:sign_list = []
+        for l:lnum in range(1,len(
+                    \ l:watched_var_list+l:rest_watched_var_list))
+            let l:sign_dict = {
+                        \ 'group': s:sign_watch_group,
+                        \ 'id': l:lnum,
+                        \ 'name': s:sign_watch_name,
+                        \ 'buffer': s:vexp_bufnr,
+                        \ 'lnum': l:lnum,
+                        \ 'priority': s:sign_watch_priority,
+                        \ }
+            call add(l:sign_list, l:sign_dict)
+        endfor
+        call sign_placelist(l:sign_list)
+
+        call delete(s:tmpfile_variable)
+    endif
+endfunction
+
+function! s:UpdateWatch(var_list) abort
+    let l:watched_var_list = []
+    let l:unwatched_var_list = []
+    " variables in watchlist but not defined in current scope
+    let l:rest_watched_var_list = deepcopy(s:vexp_watch_list)
+    for l:cur_line in a:var_list
+        let l:info = split(l:cur_line, '\t')
+        if len(l:info) >= 1
+            " might be some spaces around
+            let l:var_name = trim(l:info[0])
+            let l:idx = index(s:vexp_watch_list,l:var_name)
+            if l:idx != -1
+                call add(l:watched_var_list, l:cur_line)
+                call remove(l:rest_watched_var_list,
+                            \ index(l:rest_watched_var_list,l:var_name))
+            else
+                call add(l:unwatched_var_list, l:cur_line)
+            endif
+        endif
+    endfor
+    return [l:watched_var_list,
+                \ l:unwatched_var_list,
+                \ l:rest_watched_var_list]
 endfunction
 
 " TODO
