@@ -10,7 +10,7 @@
 
 This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octave.
 
-- [x] Support for Vim
+- [x] Support for Vim >= 8.2
 - [ ] Support for Neovim
 
 ## Installation
@@ -23,11 +23,13 @@ Plug 'NewComer00/octavetui.vim', {'branch': 'main'}
 
 ## Features
 - [x] Variable explorer
-- [ ] Display the values of variables
+- [X] Display the values of variables
+- [X] Variable watch list
 - [x] Octave command line interface
 - [x] Visualizing the breakpoints and the program counter
 - [x] Debugging directly from the code buffer using hotkeys
 - [ ] Allowing users to customize their debugger hotkeys
+- [ ] More ...
 
 ## Usage
 Frist, open an Octave code file with Vim. Then type the command below to start the TUI.
@@ -44,7 +46,8 @@ If you need to exit the TUI, please type the command below.
 :OctaveTUIStop
 ```
 
-## Debugger Commands & Hotkeys
+## Commands & Hotkeys
+### Debugger-related (For Code Buffer)
 All the listed normal-mode-keymaps only take effect in the **code buffer**. You can manually disable them using command `:OctaveTUIDeactivateKeymap` and re-enable them using command `:OctaveTUIActivateKeymap`.
 
 Commands                  | Hotkeys
@@ -59,6 +62,14 @@ Commands                  | Hotkeys
 `:OctaveTUIQuit`          | `q`
 `:OctaveTUIQuitStacked`   | `Q`
 `:OctaveTUIContinue`      | `c`
+
+### Variable Explorer
+All the listed normal-mode-keymaps only take effect in the **variable explorer**.
+
+Commands                    | Hotkeys
+----------------------------|--------
+`:OctaveTUIAddToWatch`      | `p`
+`:OctaveTUIRemoveFromWatch` | `P`
 
 ## Tips
 ### Customizing the prompt of the Octave CLI
