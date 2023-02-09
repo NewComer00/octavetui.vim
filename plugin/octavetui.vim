@@ -14,12 +14,13 @@ endif
 let g:loaded_octavetui = 1
 
 if has('win32')
-    let g:octavetui_octave_executable = get(g:, 'octavetui_octave_executable', 'octave-cli.bat')
+    let g:octavetui_octave_executable = get(g:, 'octavetui_octave_executable', 'octave.bat')
 else
     let g:octavetui_octave_executable = get(g:, 'octavetui_octave_executable', 'octave-cli')
 endif
 let g:octavetui_callback_interval = get(g:, 'octavetui_callback_interval', 100)
 let g:octavetui_history_number = get(g:, 'octavetui_history_number', 20)
+let g:octavetui_max_displayed_numel = get(g:, 'octavetui_max_displayed_numel', 20)
 let g:enable_welcome_text = get(g:, 'enable_welcome_text', 1)
 
 let g:octavetui_breakpoint_symbol = get(g:, 'octavetui_breakpoint_symbol', '🔴')

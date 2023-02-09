@@ -4,6 +4,7 @@ let s:octave_script_dir = s:plugin_root . '/octave'
 let s:octave_executable = g:octavetui_octave_executable
 let s:callback_check_interval = g:octavetui_callback_interval
 let s:history_num = g:octavetui_history_number
+let s:max_numel = g:octavetui_max_displayed_numel
 
 let s:welcome_text_file = s:plugin_root . '/welcome.txt'
 let s:enable_welcome_text = g:enable_welcome_text
@@ -21,6 +22,7 @@ let s:envvar_history = 'OCTAVETUI_HISTORY'
 let s:envvar_history_num = 'OCTAVETUI_HISTORY_NUM'
 let s:tmpfile_variable = tempname()
 let s:envvar_variable = 'OCTAVETUI_VARIABLE'
+let s:envvar_max_numel = 'OCTAVETUI_MAX_NUMEL'
 let s:tmpfile_breakpoint = tempname()
 let s:envvar_breakpoint = 'OCTAVETUI_BREAKPOINT'
 let s:tmpfile_nextexec = tempname()
@@ -159,6 +161,7 @@ function! octavetui#StartCli() abort
                 \ s:envvar_history: s:tmpfile_history,
                 \ s:envvar_history_num: s:history_num,
                 \ s:envvar_variable: s:tmpfile_variable,
+                \ s:envvar_max_numel: s:max_numel,
                 \ s:envvar_breakpoint: s:tmpfile_breakpoint,
                 \ s:envvar_nextexec: s:tmpfile_nextexec,
                 \ }
@@ -172,7 +175,7 @@ function! octavetui#StartCli() abort
 
     let l:cli_start_cmd = [s:octave_executable, '--path', s:octave_script_dir]
 
-    let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
+    belowright let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
     let s:cli_winid = win_getid()
 
     tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>Update()<CR>
@@ -191,13 +194,18 @@ function! octavetui#StartVarExp() abort
 
     setlocal nowrap
     setlocal nolist
-    setlocal nonumber
+    setlocal number
     setlocal norelativenumber
     let s:vexp_winid = win_getid()
 
     if s:enable_welcome_text
         call s:DisplayWelcomeText()
     endif
+
+    syntax match Identifier "\v^[^\t]+\t"
+    syntax match Number "\v\t[^\t]+$"
+    syntax keyword Type double single int complex sparse char string logical
+                \ table timetable struct cell function_handle
 endfunction
 
 function! octavetui#StopVarExp() abort
@@ -444,16 +452,5 @@ endfunction
 
 function! s:DisplayWelcomeText() abort
         let l:welcome_text = readfile(s:welcome_text_file)
-
-        let l:vexp_height = winheight(s:vexp_bufnr)
-        let l:padding_vertical = repeat([''], l:vexp_height/2)
-        call setbufline(s:vexp_bufnr, 1,
-                    \ l:padding_vertical
-                    \ + l:welcome_text
-                    \ + l:padding_vertical
-                    \ )
-
-        let l:init_line = len(l:welcome_text)/2 + l:vexp_height/2
-        exec ':' . l:init_line
-        normal! zz
+        call setbufline(s:vexp_bufnr, 1, l:welcome_text)
 endfunction
