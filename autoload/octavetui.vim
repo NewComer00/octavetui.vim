@@ -240,7 +240,8 @@ function! octavetui#StartVarExp() abort
 
     syntax match Identifier "\v^[^\t]+\t"
     syntax match Number "\v\t[^\t]+$"
-    syntax keyword Type double single int complex sparse char string logical
+    syntax keyword Type double single complex sparse char string logical
+                \ int8 int16 int32 int64
                 \ table timetable struct cell function_handle
 endfunction
 
@@ -260,7 +261,12 @@ function! octavetui#AddToWatch() abort
             call uniq(sort(s:vexp_watch_list))
         endif
     endif
-    call octavetui#Refresh()
+
+    let l:cmd = "run octavetui_modify_watchlist"
+    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
+    call timer_start(s:callback_check_interval,
+                \ function('s:UpdateVarExp', []),
+                \ {'repeat': -1})
 endfunction
 
 function! octavetui#RemoveFromWatch() abort
@@ -276,7 +282,12 @@ function! octavetui#RemoveFromWatch() abort
             endif
         endif
     endif
-    call octavetui#Refresh()
+
+    let l:cmd = "run octavetui_modify_watchlist"
+    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
+    call timer_start(s:callback_check_interval,
+                \ function('s:UpdateVarExp', []),
+                \ {'repeat': -1})
 endfunction
 
 function! octavetui#SetBreakpoint() abort
