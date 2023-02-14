@@ -5,6 +5,7 @@ let s:octave_executable = g:octavetui_octave_executable
 let s:callback_check_interval = g:octavetui_callback_interval
 let s:history_num = g:octavetui_history_number
 let s:max_numel = g:octavetui_max_displayed_numel
+let s:max_precision = g:octavetui_max_displayed_precision
 
 let s:welcome_text_file = s:plugin_root . '/welcome.txt'
 let s:enable_welcome_text = g:enable_welcome_text
@@ -23,6 +24,7 @@ let s:envvar_history_num = 'OCTAVETUI_HISTORY_NUM'
 let s:tmpfile_variable = tempname()
 let s:envvar_variable = 'OCTAVETUI_VARIABLE'
 let s:envvar_max_numel = 'OCTAVETUI_MAX_NUMEL'
+let s:envvar_max_precision = 'OCTAVETUI_MAX_PRECISION'
 let s:tmpfile_breakpoint = tempname()
 let s:envvar_breakpoint = 'OCTAVETUI_BREAKPOINT'
 let s:tmpfile_nextexec = tempname()
@@ -196,6 +198,7 @@ function! octavetui#StartCli() abort
                 \ s:envvar_history_num: s:history_num,
                 \ s:envvar_variable: s:tmpfile_variable,
                 \ s:envvar_max_numel: s:max_numel,
+                \ s:envvar_max_precision: s:max_precision,
                 \ s:envvar_breakpoint: s:tmpfile_breakpoint,
                 \ s:envvar_nextexec: s:tmpfile_nextexec,
                 \ }
