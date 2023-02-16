@@ -8,7 +8,7 @@ let s:max_numel = g:octavetui_max_displayed_numel
 let s:max_precision = g:octavetui_max_displayed_precision
 
 let s:welcome_text_file = s:plugin_root . '/welcome.txt'
-let s:enable_welcome_text = g:enable_welcome_text
+let s:enable_welcome_text = g:octavetui_enable_welcome_text
 
 let s:main_winid = ''
 let s:cli_buf_name = 'Octave CLI'

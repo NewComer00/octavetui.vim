@@ -70,11 +70,31 @@ Command                     | Hotkey  | Description
 `:OctaveTUIAddToWatch`      | `p`     | Pin the variable of the current line to the top of the variable explorer.
 `:OctaveTUIRemoveFromWatch` | `P`     | Unpin the variable of the current line from the top of the variable explorer.
 
+## Configuration
+### Octave Executable
+You can specify the GNU Octave executable used by this plugin. The default configuration is
+```vim
+" on Windows
+let g:octavetui_octave_executable = 'octave.bat'
+
+" on the other platforms
+let g:octavetui_octave_executable = 'octave-cli'
+```
+
+Modify this value in your Vim config if you have the GNU Octave executable installed in a different place. For example:
+```vim
+" on Windows
+let g:octavetui_octave_executable = 'C:\Program Files\GNU Octave\Octave-7.3.0\mingw64\bin\octave.bat'
+
+" on the other platforms
+let g:octavetui_octave_executable = '/usr/bin/octave-cli'
+```
+
 ## Tips
 ### Customizing the prompt of the Octave CLI
 Please refer to this [documentation](https://docs.octave.org/latest/Customizing-the-Prompt.html). For example, you can create a personal config file `~/.octaverc` and place the following command in it:
 ```
-% using ANSI escape sequences for the colorful prompt
+% using ANSI escape sequences for a colorful prompt
 PS1('\[\033[01;31m\]octave:\#> \[\033[0m\]');
 ```
 Now open the Octave CLI application (or start this plugin in Vim). You will get the prompt displayed in **red**.
