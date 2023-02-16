@@ -23,9 +23,8 @@ Plug 'NewComer00/octavetui.vim', {'branch': 'main'}
 
 ## Features
 - [x] Variable explorer
-- [X] Display the values of variables
-- [X] Variable watch list
 - [x] Octave command line interface
+- [X] Variable watch list
 - [x] Visualizing the breakpoints and the program counter
 - [x] Debugging directly from the code buffer using hotkeys
 - [ ] Allowing users to customize their debugger hotkeys
@@ -50,26 +49,26 @@ If you need to exit the TUI, please type the command below.
 ### Debugger-related (For Code Buffer)
 All the listed normal-mode-keymaps only take effect in the **code buffer**. You can manually disable them using command `:OctaveTUIDeactivateKeymap` and re-enable them using command `:OctaveTUIActivateKeymap`.
 
-Commands                  | Hotkeys
---------------------------|--------
-`:OctaveTUISetBreakpoint` | `b`
-`:OctaveTUIDelBreakpoint` | `B`
-`:OctaveTUINext`          | `n`
-`:OctaveTUIStepIn`        | `s`
-`:OctaveTUIStepOut`       | `S`
-`:OctaveTUIRun`           | `r`
-`:OctaveTUIRunStacked`    | `R`
-`:OctaveTUIQuit`          | `q`
-`:OctaveTUIQuitStacked`   | `Q`
-`:OctaveTUIContinue`      | `c`
+Command                   | Hotkey  | Description 
+--------------------------|---------|-------------
+`:OctaveTUISetBreakpoint` | `b`     | Set a breakpoint on or near the current line.
+`:OctaveTUIDelBreakpoint` | `B`     | Delete the breakpoint on or near the current line.
+`:OctaveTUINext`          | `n`     | Step over the next code line.
+`:OctaveTUIStepIn`        | `s`     | Step into the next code line.
+`:OctaveTUIStepOut`       | `S`     | Step out of the current function or script.
+`:OctaveTUIContinue`      | `c`     | Continue the code execution until it meets the next breakpoint.
+`:OctaveTUIRun`           | `r`     | Quit all existing debugging sessions, then run the script in the code buffer.
+`:OctaveTUIRunStacked`    | `R`     | Run the script in the code buffer on top of the current debugging session.
+`:OctaveTUIQuit`          | `q`     | Quit all existing debugging sessions.
+`:OctaveTUIQuitStacked`   | `Q`     | Quit the current debugging session.
 
 ### Variable Explorer
 All the listed normal-mode-keymaps only take effect in the **variable explorer**.
 
-Commands                    | Hotkeys
-----------------------------|--------
-`:OctaveTUIAddToWatch`      | `p`
-`:OctaveTUIRemoveFromWatch` | `P`
+Command                     | Hotkey  | Description 
+----------------------------|---------|-------------
+`:OctaveTUIAddToWatch`      | `p`     | Pin the variable of the current line to the top of the variable explorer.
+`:OctaveTUIRemoveFromWatch` | `P`     | Unpin the variable of the current line from the top of the variable explorer.
 
 ## Tips
 ### Customizing the prompt of the Octave CLI
