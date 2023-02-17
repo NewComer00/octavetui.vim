@@ -6,12 +6,8 @@
 if exists('g:loaded_octavetui')
     finish
 endif
-if v:version < 801
-    echoerr "OctaveTUI: this plugin requires vim >= 8.1.2269"
-    finish
-endif
-if (v:version == 801 && !has('patch-8.1.2269'))
-    echoerr "OctaveTUI: this plugin requires vim >= 8.1.2269"
+if v:version < 802
+    echoerr "OctaveTUI: this plugin requires vim >= 8.2."
     finish
 endif
 let g:loaded_octavetui = 1
