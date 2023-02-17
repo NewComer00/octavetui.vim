@@ -10,7 +10,7 @@
 
 This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octave.
 
-- [x] Support for Vim >= 8.2
+- [x] Support for Vim >= 8.1.2269
 - [ ] Support for Neovim
 
 ## Installation

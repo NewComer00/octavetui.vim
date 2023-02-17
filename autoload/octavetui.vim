@@ -33,12 +33,22 @@ let s:envvar_nextexec = 'OCTAVETUI_NEXTEXEC'
 let s:vexp_watch_list = []
 
 
+" ============================================================================
+" HIGHLIGHT GROUPS & SIGNS
+" ============================================================================
+"
 let s:highlight_breakpoint_name = 'octavetui_hl_breakpoint'
 let s:highlight_breakpoint_color = g:octavetui_breakpoint_hlcolor
-call hlset([{'name': s:highlight_breakpoint_name,
-            \ 'ctermbg': s:highlight_breakpoint_color,
-            \ 'guibg': s:highlight_breakpoint_color,
-            \ }])
+if exists('*hlset')
+    call hlset([{'name': s:highlight_breakpoint_name,
+                \ 'ctermbg': s:highlight_breakpoint_color,
+                \ 'guibg': s:highlight_breakpoint_color,
+                \ }])
+else
+    exec 'highlight ' . s:highlight_breakpoint_name
+                \ . ' ctermbg=' . s:highlight_breakpoint_color
+                \ . ' guibg=' . s:highlight_breakpoint_color
+endif
 let s:sign_breakpoint_name = 'octavetui_sign_breakpoint'
 let s:sign_breakpoint_group = s:sign_breakpoint_name
 let s:sign_breakpoint_hl = s:highlight_breakpoint_name
@@ -52,10 +62,16 @@ call sign_define(s:sign_breakpoint_name,
 
 let s:highlight_nextexec_name = 'octavetui_hl_nextexec'
 let s:highlight_nextexec_color = g:octavetui_nextexec_hlcolor
-call hlset([{'name': s:highlight_nextexec_name,
-            \ 'ctermbg': s:highlight_nextexec_color,
-            \ 'guibg': s:highlight_nextexec_color,
-            \ }])
+if exists('*hlset')
+    call hlset([{'name': s:highlight_nextexec_name,
+                \ 'ctermbg': s:highlight_nextexec_color,
+                \ 'guibg': s:highlight_nextexec_color,
+                \ }])
+else
+    exec 'highlight ' . s:highlight_nextexec_name
+                \ . ' ctermbg=' . s:highlight_nextexec_color
+                \ . ' guibg=' . s:highlight_nextexec_color
+endif
 let s:sign_nextexec_name = 'octavetui_sign_nextexec'
 let s:sign_nextexec_group = s:sign_nextexec_name
 let s:sign_nextexec_hl = s:highlight_nextexec_name
@@ -351,6 +367,42 @@ endfunction
 " PRIVATE FUNCTIONS
 " ============================================================================
 
+function! s:RemoveTmpFile() abort
+    call delete(s:tmpfile_variable)
+    call delete(s:tmpfile_breakpoint)
+    call delete(s:tmpfile_nextexec)
+endfunction
+
+" if a file is readable, and it is not occupied by Octave fopen(...,'wt')
+function! s:FileIsFree(filename) abort
+    if !filereadable(a:filename)
+        return v:false
+    else
+        if has('win32')
+            let l:temp = tempname()
+            call rename(a:filename, l:temp)
+            if filereadable(a:filename)
+                " file is readable but occupied
+                call delete(l:temp)
+                return v:false
+            else
+                call rename(l:temp, a:filename)
+                return v:true
+            endif
+        else
+            " on linux or other system with lsof command
+            let l:cmd = 'lsof ' . a:filename
+            silent call system(l:cmd)
+            " if the file is opened in other processes
+            if v:shell_error == 0
+                return v:false
+            else
+                return v:true
+            endif
+        endif
+    endif
+endfunction
+
 function! s:Init() abort
     call s:RemoveTmpFile()
     let s:main_winid = win_getid()
@@ -405,42 +457,6 @@ function! s:Update() abort
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateNextexec', []),
                 \ {'repeat': -1})
-endfunction
-
-function! s:RemoveTmpFile() abort
-    call delete(s:tmpfile_variable)
-    call delete(s:tmpfile_breakpoint)
-    call delete(s:tmpfile_nextexec)
-endfunction
-
-" if a file is readable, and it is not occupied by Octave fopen(...,'wt')
-function! s:FileIsFree(filename) abort
-    if !filereadable(a:filename)
-        return v:false
-    else
-        if has('win32')
-            let l:temp = tempname()
-            call rename(a:filename, l:temp)
-            if filereadable(a:filename)
-                " file is readable but occupied
-                call delete(l:temp)
-                return v:false
-            else
-                call rename(l:temp, a:filename)
-                return v:true
-            endif
-        else
-            " on linux or other system with lsof command
-            let l:cmd = 'lsof ' . a:filename
-            silent call system(l:cmd)
-            " if the file is opened in other processes
-            if v:shell_error == 0
-                return v:false
-            else
-                return v:true
-            endif
-        endif
-    endif
 endfunction
 
 function! s:UpdateVarExp(timerid) abort
