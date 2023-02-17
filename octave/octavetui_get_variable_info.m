@@ -37,7 +37,7 @@ function [var_descriptions, var_valstrings] = octavetui_get_variable_info(var_va
             elseif isnumeric(_var) || islogical(_var)
                 max_precision = str2num(getenv('OCTAVETUI_MAX_PRECISION'));
                 value_str = mat2str(_var, max_precision);
-            elseif class(_var) == 'function_handle'
+            elseif strcmp(class(_var), 'function_handle')
                 value_str = func2str(_var);
             end
         end

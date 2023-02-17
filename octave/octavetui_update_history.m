@@ -5,7 +5,7 @@ function octavetui_update_history(operation)
     if strcmp(operation, 'write')
         history_list = history(history_num+1);
         fp = fopen(tempfile,'wt');
-        fputs(fp,strjoin(history_list,newline));
+        fputs(fp,strjoin(history_list,"\n"));
         fclose(fp);
     elseif strcmp(operation, 'read')
         history('-r',tempfile);
