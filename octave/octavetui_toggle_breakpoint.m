@@ -1,5 +1,5 @@
 function octavetui_toggle_breakpoint(operation, filename, linenum_str)
-    octavetui_update_history('write');
+    octavetui_hide_history();
 
     if strcmp(operation, 'set')
         dbstop(filename, linenum_str);
@@ -8,6 +8,4 @@ function octavetui_toggle_breakpoint(operation, filename, linenum_str)
     end
 
     octavetui_update_breakpoint();
-
-    octavetui_update_history('read');
 end

@@ -3,8 +3,8 @@ function octavetui_update_nextexec()
 
     fp = fopen(tempfile, 'wt');
 
-    octave_version = version();
-    octave_major_version = str2num(octave_version(1));
+    octave_version_str = version();
+    octave_major_version = str2num(octave_version_str(1));
     if octave_major_version <= 5
         frame_depth = 3;
     else

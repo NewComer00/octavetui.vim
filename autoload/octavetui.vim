@@ -116,7 +116,7 @@ function! s:SetPluginCommand() abort
     command! OctaveTUIStepIn call octavetui#DBStep('in')
     command! OctaveTUIStepOut call octavetui#DBStep('out')
     command! OctaveTUIQuit call octavetui#DBQuit('all')
-    command! OctaveTUIQuitStacked call octavetui#DBQuit('')
+    command! OctaveTUIQuitStacked call octavetui#DBQuit('stacked')
     command! OctaveTUIContinue call octavetui#DBContinue()
 endfunction
 
@@ -236,7 +236,7 @@ endfunction
 
 function! octavetui#StopCli() abort
     let l:cmd_octave_quit = 'exit'
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd_octave_quit."\<CR>")
+    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd_octave_quit."\<CR>")
 endfunction
 
 function! octavetui#StartVarExp() abort
@@ -282,7 +282,7 @@ function! octavetui#AddToWatch() abort
     endif
 
     let l:cmd = "run octavetui_modify_watchlist"
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
+    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateVarExp', []),
                 \ {'repeat': -1})
@@ -303,7 +303,7 @@ function! octavetui#RemoveFromWatch() abort
     endif
 
     let l:cmd = "run octavetui_modify_watchlist"
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
+    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateVarExp', []),
                 \ {'repeat': -1})
@@ -313,7 +313,7 @@ function! octavetui#SetBreakpoint() abort
     let l:octave_filename = expand('%:t')
     let l:line_num = line('.')
     let l:cmd = "octavetui_toggle_breakpoint set '".l:octave_filename."' ".l:line_num
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
+    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
                 \ {'repeat': -1})
@@ -323,7 +323,7 @@ function! octavetui#DelBreakpoint() abort
     let l:octave_filename = expand('%:t')
     let l:line_num = line('.')
     let l:cmd = "octavetui_toggle_breakpoint del '".l:octave_filename."' ".l:line_num
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".l:cmd."\<CR>")
+    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
                 \ {'repeat': -1})
@@ -334,12 +334,12 @@ function! octavetui#Refresh() abort
 endfunction
 
 function! octavetui#ExecCmd(cmd) abort
-    call term_sendkeys(s:cli_bufnr, "\<C-E>\<C-U>".a:cmd."\<CR>")
+    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".a:cmd."\<CR>")
     call s:Update()
 endfunction
 
 function! octavetui#DBQuit(arguments) abort
-    let l:cmd = 'dbquit ' . a:arguments
+    let l:cmd = 'octavetui_debug_quit ' . a:arguments
     call octavetui#ExecCmd(l:cmd)
 endfunction
 
