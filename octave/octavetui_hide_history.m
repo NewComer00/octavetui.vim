@@ -9,3 +9,4 @@ function octavetui_hide_history()
 
     history('-r',tempfile);
     delete(tempfile);
+end
