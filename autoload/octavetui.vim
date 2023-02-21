@@ -343,9 +343,10 @@ function! octavetui#DBQuit(arguments) abort
     call octavetui#ExecCmd(l:cmd)
 endfunction
 
-function! octavetui#DBRun(quit_before_run) abort
-    if a:quit_before_run
+function! octavetui#DBRun(clean_run) abort
+    if a:clean_run
         call octavetui#DBQuit('all')
+        call octavetui#ExecCmd('clear')
     endif
     let l:main_buf_file = expand('#'.winbufnr(s:main_winid).':p')
     let l:cmd = 'run '.l:main_buf_file

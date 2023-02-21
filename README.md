@@ -58,10 +58,10 @@ Command                   | Hotkey  | Description
 `:OctaveTUIStepIn`        | `s`     | Step into the next code line.
 `:OctaveTUIStepOut`       | `S`     | Step out of the current function or script.
 `:OctaveTUIContinue`      | `c`     | Continue the code execution until it meets the next breakpoint.
-`:OctaveTUIRun`           | `r`     | Quit all existing debugging sessions, then run the script in the code buffer.
-`:OctaveTUIRunStacked`    | `R`     | Run the script in the code buffer on top of the current debugging session.
+`:OctaveTUIRun`           | `r`     | Quit all existing debugging sessions; clear variables; then run the script in the code buffer.
+`:OctaveTUIRunStacked`    | `R`     | Run the script in the code buffer on top of the current debugging session. **Only for Octave >= 6**.
 `:OctaveTUIQuit`          | `q`     | Quit all existing debugging sessions.
-`:OctaveTUIQuitStacked`   | `Q`     | Quit the current debugging session.
+`:OctaveTUIQuitStacked`   | `Q`     | Quit the current debugging session. **Only for Octave >= 6**.
 
 ### Variable Explorer
 All the listed normal-mode-keymaps only take effect in the **variable explorer**.
