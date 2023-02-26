@@ -196,10 +196,11 @@ endfunction
 " PUBLIC FUNCTIONS
 " ============================================================================
 
-function! octavetui#StartTUI() abort
+function! octavetui#StartTUI(start_args) abort
+    let l:cli_args = a:start_args
     call s:Init()
     call octavetui#StartVarExp()
-    call octavetui#StartCli()
+    call octavetui#StartCli(l:cli_args)
 endfunction
 
 function! octavetui#StopTUI() abort
@@ -208,7 +209,7 @@ function! octavetui#StopTUI() abort
     call octavetui#StopCli()
 endfunction
 
-function! octavetui#StartCli() abort
+function! octavetui#StartCli(cli_args) abort
     let l:cli_envs = {
                 \ s:envvar_history: s:tmpfile_history,
                 \ s:envvar_history_num: s:history_num,
@@ -226,7 +227,8 @@ function! octavetui#StartCli() abort
                 \ 'term_finish': 'close',
                 \ }
 
-    let l:cli_start_cmd = [s:octave_executable, '--path', s:octave_script_dir]
+    let l:cli_start_cmd = s:octave_executable.' --path '.s:octave_script_dir
+                \ .' '.a:cli_args
 
     belowright let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
     let s:cli_winid = win_getid()

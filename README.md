@@ -32,9 +32,14 @@ Plug 'NewComer00/octavetui.vim', {'branch': 'main'}
 - [ ] More ...
 
 ## Usage
-Frist, open an Octave code file with Vim. Then type the command below to start the TUI.
+You need to open an Octave `.m` script with Vim, then type the command below to start the TUI.
 ```vim
 :OctaveTUIStart
+```
+Also, you can start the TUI with arguments which will be delivered to the Octave executable.
+```vim
+" on Windows, please use double quotes to deal with space characters
+:OctaveTUIStart -q --image-path "D:\My Pictures"
 ```
 
 Once the TUI is started, the current Vim tab will be divided into three windows -- the **code buffer** window, the **variable explorer** window and the **Octave CLI** window.
