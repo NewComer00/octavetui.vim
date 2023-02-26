@@ -38,7 +38,7 @@ You need to open an Octave `.m` script with Vim, then type the command below to 
 ```
 Also, you can start the TUI with arguments which will be delivered to the Octave executable.
 ```vim
-" on Windows, please use double quotes to deal with space characters
+" please use the double quotes to deal with whitespace characters
 :OctaveTUIStart -q --image-path "D:\My Pictures"
 ```
 
