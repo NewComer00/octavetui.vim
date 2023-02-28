@@ -2,6 +2,7 @@ let s:plugin_root = fnamemodify(resolve(expand('<sfile>:p')), ':h:h')
 let s:octave_script_dir = s:plugin_root . '/octave'
 
 let s:octave_executable = g:octavetui_octave_executable
+let s:flock_checker = g:octavetui_windows_flock_checker
 let s:callback_check_interval = g:octavetui_callback_interval
 let s:history_num = g:octavetui_history_number
 let s:max_numel = g:octavetui_max_displayed_numel
@@ -319,6 +320,7 @@ function! octavetui#SetBreakpoint(line_num) abort
     endif
     let l:octave_filename = expand('%:t')
     let l:cmd = "octavetui_toggle_breakpoint set '".l:octave_filename."' ".l:line_num
+    call delete(s:tmpfile_breakpoint)
     call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
@@ -333,6 +335,7 @@ function! octavetui#DelBreakpoint(line_num) abort
     endif
     let l:octave_filename = expand('%:t')
     let l:cmd = "octavetui_toggle_breakpoint del '".l:octave_filename."' ".l:line_num
+    call delete(s:tmpfile_breakpoint)
     call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
@@ -390,15 +393,52 @@ function! s:FileIsFree(filename) abort
         return v:false
     else
         if has('win32')
-            let l:temp = tempname()
-            call rename(a:filename, l:temp)
-            if filereadable(a:filename)
-                " file is readable but occupied
-                call delete(l:temp)
-                return v:false
+            " if 'LockCheck' is installed on Windows
+            " https://github.com/ader1990/LockCheck/blob/master/Binaries/lsof.exe
+            if s:flock_checker == 'lsof' && executable('lsof')
+                let l:cmd = 'lsof FILE' . a:filename
+                silent let l:result = system(l:cmd)
+                " if the file is opened in other processes
+                if matchstr(l:result, escape(a:filename,'\'))
+                    return v:false
+                else
+                    return v:true
+                endif
+            " if 'Handle' is installed on Windows
+            " https://learn.microsoft.com/en-us/sysinternals/downloads/handle
+            " TODO: this branch only detect the files opened by OCTAVE
+            elseif s:flock_checker == 'handle' && executable('handle')
+                let l:cmd = 'handle -nobanner -p octave'
+                silent let l:result = system(l:cmd)
+                " if the file is opened in Octave
+                if matchstr(l:result, escape(a:filename,'\'))
+                    return v:false
+                else
+                    return v:true
+                endif
+            " if 'fuserforwin32' is installed on Windows
+            " https://sourceforge.net/projects/fuserforwin32/
+            elseif s:flock_checker == 'fuser' && executable('fuser')
+                let l:cmd = 'fuser' . a:filename
+                silent call system(l:cmd)
+                " if the file is opened in other processes
+                if v:shell_error == 0
+                    return v:false
+                else
+                    return v:true
+                endif
+            " TODO: a hacky way to find if a file is opened in other processes
             else
-                call rename(l:temp, a:filename)
-                return v:true
+                let l:temp = tempname()
+                call rename(a:filename, l:temp)
+                if filereadable(a:filename)
+                    " file is readable but occupied
+                    call delete(l:temp)
+                    return v:false
+                else
+                    call rename(l:temp, a:filename)
+                    return v:true
+                endif
             endif
         else
             " on linux or other system with lsof command

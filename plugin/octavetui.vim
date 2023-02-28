@@ -17,6 +17,7 @@ if has('win32')
 else
     let g:octavetui_octave_executable = get(g:, 'octavetui_octave_executable', 'octave-cli')
 endif
+let g:octavetui_windows_flock_checker = get(g:, 'octavetui_windows_flock_checker', 'hacky')
 let g:octavetui_callback_interval = get(g:, 'octavetui_callback_interval', 100)
 let g:octavetui_history_number = get(g:, 'octavetui_history_number', 20)
 let g:octavetui_max_displayed_numel = get(g:, 'octavetui_max_displayed_numel', 20)
