@@ -21,7 +21,6 @@ Plug 'NewComer00/octavetui.vim', {'branch': 'main'}
 ```
 **🟨 IMPORTANT:** The GNU Octave package provided by `snap` [does not](https://askubuntu.com/questions/1238211/how-to-make-snaps-access-hidden-files-and-folders-in-home) have access to the hidden files and dirs placed in `$HOME` directory (for example, `~/.vim/`). This plugin will not work normally if its installation path is not accessible to Octave. To solve this problem, you can specify a different Vim plugin installation path, or you can reinstall the GNU Octave package by another package manager like `apt`.
 
-
 ## Features
 - [x] Variable explorer
 - [x] Octave command line interface
@@ -30,6 +29,13 @@ Plug 'NewComer00/octavetui.vim', {'branch': 'main'}
 - [x] Debugging directly from the code buffer using hotkeys
 - [ ] Allowing users to customize their debugger hotkeys
 - [ ] More ...
+
+## Known Bugs
+Currently this Vim plugin communicates with Octave CLI in a very simple way. The plugin sends command strings to the terminal buffer where Octave CLI is running, and Octave CLI writes the output to some temp files which are then read and parsed by Vim. Communications between this plugin and Octave CLI are asynchronous.
+
+The known bugs are listed below:
+1. **Commands across multiple lines cannot be run directly in the Octave CLI buffer.** Once you press `<CR>` in the Octave CLI buffer, a command to update the TUI will be sent to Octave CLI automatically.
+2. **On Windows, the display of some variables or breakpoints might disappears rarely.** Try `:OctaveTUIRefresh` command to refresh the TUI. 
 
 ## Usage
 You need to open an Octave `.m` script with Vim, then type the command below to start the TUI.
