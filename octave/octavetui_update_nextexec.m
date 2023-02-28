@@ -5,11 +5,7 @@ function octavetui_update_nextexec()
 
     octave_version_str = version();
     octave_major_version = str2num(octave_version_str(1));
-    if octave_major_version <= 5
-        frame_depth = 3;
-    else
-        frame_depth = 4;
-    end
+    frame_depth = 3;
 
     nextexec = '';
     if isdebugmode()

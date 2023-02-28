@@ -25,7 +25,7 @@ Plug 'NewComer00/octavetui.vim', {'branch': 'main'}
 ## Features
 - [x] Variable explorer
 - [x] Octave command line interface
-- [X] Variable watch list
+- [x] Variable watch list
 - [x] Visualizing the breakpoints and the program counter
 - [x] Debugging directly from the code buffer using hotkeys
 - [ ] Allowing users to customize their debugger hotkeys
@@ -57,16 +57,16 @@ All the listed normal-mode-keymaps only take effect in the **code buffer**. You 
 
 Command                   | Hotkey  | Description 
 --------------------------|---------|-------------
-`:OctaveTUISetBreakpoint` | `b`     | Set a breakpoint on or near the current line.
-`:OctaveTUIDelBreakpoint` | `B`     | Delete the breakpoint on or near the current line.
-`:OctaveTUINext`          | `n`     | Step over the next code line.
-`:OctaveTUIStepIn`        | `s`     | Step into the next code line.
-`:OctaveTUIStepOut`       | `S`     | Step out of the current function or script.
-`:OctaveTUIContinue`      | `c`     | Continue the code execution until it meets the next breakpoint.
+`:OctaveTUISetBreakpoint` | `[N]b`  | Set a breakpoint on or near the `N`th line. If `N` is omitted, set the breakpoint on or near the current line.
+`:OctaveTUIDelBreakpoint` | `[N]B`  | Delete the breakpoint on or near the `N`th line. If `N` is omitted, delete the breakpoint on or near the current line.
 `:OctaveTUIRun`           | `r`     | Quit all existing debugging sessions; clear variables; then run the script in the code buffer.
 `:OctaveTUIRunStacked`    | `R`     | Run the script in the code buffer on top of the current debugging session. **Only for Octave >= 6**.
 `:OctaveTUIQuit`          | `q`     | Quit all existing debugging sessions.
 `:OctaveTUIQuitStacked`   | `Q`     | Quit the current debugging session. **Only for Octave >= 6**.
+`:OctaveTUINext`          | `[N]n`  | Execute the next `N` lines of code. If `N` is omitted, execute the next single line of code.
+`:OctaveTUIStepIn`        | `s`     | Step into the next code line.
+`:OctaveTUIStepOut`       | `S`     | Step out of the current function or script.
+`:OctaveTUIContinue`      | `c`     | Continue the code execution until it meets the next breakpoint.
 
 ### Variable Explorer
 All the listed normal-mode-keymaps only take effect in the **variable explorer**.

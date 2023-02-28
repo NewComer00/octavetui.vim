@@ -110,9 +110,9 @@ function! s:SetPluginCommand() abort
 
     command! OctaveTUIRun call octavetui#DBRun(1)
     command! OctaveTUIRunStacked call octavetui#DBRun(0)
-    command! OctaveTUISetBreakpoint call octavetui#SetBreakpoint()
-    command! OctaveTUIDelBreakpoint call octavetui#DelBreakpoint()
-    command! OctaveTUINext call octavetui#DBStep('')
+    command! -count=0 OctaveTUISetBreakpoint call octavetui#SetBreakpoint(<count>)
+    command! -count=0 OctaveTUIDelBreakpoint call octavetui#DelBreakpoint(<count>)
+    command! -count=1 OctaveTUINext call octavetui#DBStep(<count>)
     command! OctaveTUIStepIn call octavetui#DBStep('in')
     command! OctaveTUIStepOut call octavetui#DBStep('out')
     command! OctaveTUIQuit call octavetui#DBQuit('all')
@@ -150,9 +150,9 @@ endfunction
 " set up keymap for main code buffer
 " TODO: let user customize keymap
 function! octavetui#SetMainKeymap() abort
-    nnoremap <buffer> <silent> b :OctaveTUISetBreakpoint<CR>
-    nnoremap <buffer> <silent> B :OctaveTUIDelBreakpoint<CR>
-    nnoremap <buffer> <silent> n :OctaveTUINext<CR>
+    nnoremap <buffer> <silent> b :<C-U>exec v:count.'OctaveTUISetBreakpoint'<CR>
+    nnoremap <buffer> <silent> B :<C-U>exec v:count.'OctaveTUIDelBreakpoint'<CR>
+    nnoremap <buffer> <silent> n :<C-U>exec v:count1.'OctaveTUINext'<CR>
     nnoremap <buffer> <silent> s :OctaveTUIStepIn<CR>
     nnoremap <buffer> <silent> S :OctaveTUIStepOut<CR>
     nnoremap <buffer> <silent> r :OctaveTUIRun<CR>
@@ -283,7 +283,7 @@ function! octavetui#AddToWatch() abort
         endif
     endif
 
-    let l:cmd = "run octavetui_modify_watchlist"
+    let l:cmd = "octavetui_modify_watchlist"
     call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateVarExp', []),
@@ -304,16 +304,20 @@ function! octavetui#RemoveFromWatch() abort
         endif
     endif
 
-    let l:cmd = "run octavetui_modify_watchlist"
+    let l:cmd = "octavetui_modify_watchlist"
     call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateVarExp', []),
                 \ {'repeat': -1})
 endfunction
 
-function! octavetui#SetBreakpoint() abort
+function! octavetui#SetBreakpoint(line_num) abort
+    if a:line_num == 0
+        let l:line_num = line('.')
+    else
+        let l:line_num = a:line_num
+    endif
     let l:octave_filename = expand('%:t')
-    let l:line_num = line('.')
     let l:cmd = "octavetui_toggle_breakpoint set '".l:octave_filename."' ".l:line_num
     call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
@@ -321,9 +325,13 @@ function! octavetui#SetBreakpoint() abort
                 \ {'repeat': -1})
 endfunction
 
-function! octavetui#DelBreakpoint() abort
+function! octavetui#DelBreakpoint(line_num) abort
+    if a:line_num == 0
+        let l:line_num = line('.')
+    else
+        let l:line_num = a:line_num
+    endif
     let l:octave_filename = expand('%:t')
-    let l:line_num = line('.')
     let l:cmd = "octavetui_toggle_breakpoint del '".l:octave_filename."' ".l:line_num
     call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
@@ -446,7 +454,7 @@ endfunction
 function! s:Update() abort
     call s:RemoveTmpFile()
 
-    let cmd = 'run octavetui_update'
+    let cmd = 'octavetui_update'
     call term_sendkeys(s:cli_bufnr, cmd . "\<CR>")
 
     call timer_start(s:callback_check_interval,
