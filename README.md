@@ -14,6 +14,12 @@ This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octav
 - [x] Support for Vim >= 8.2
 - [ ] Support for Neovim
 
+---
+
+![Plugin Screenshot](https://user-images.githubusercontent.com/37762193/221892507-989a53a8-d3e5-444d-8045-6340154110d2.png)
+
+---
+
 ## Installation
 You can use any conventional plugin manager for Vim, such as [vim-plug](https://github.com/junegunn/vim-plug):
 ```vim
