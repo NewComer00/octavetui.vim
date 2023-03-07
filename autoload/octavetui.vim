@@ -2,6 +2,7 @@ let s:plugin_root = fnamemodify(resolve(expand('<sfile>:p')), ':h:h')
 let s:octave_script_dir = s:plugin_root . '/octave'
 
 let s:octave_executable = g:octavetui_octave_executable
+let s:user_keymaps = g:octavetui_user_keymaps
 let s:flock_checker = g:octavetui_windows_flock_checker
 let s:callback_check_interval = g:octavetui_callback_interval
 let s:history_num = g:octavetui_history_number
@@ -148,48 +149,67 @@ endfunction
 " KEYMAPS FOR USERS
 " ============================================================================
 
+const s:default_keymaps = {
+            \ 'OctaveTUISetBreakpoint':     'b',
+            \ 'OctaveTUIDelBreakpoint':     'B',
+            \ 'OctaveTUINext':              'n',
+            \ 'OctaveTUIStepIn':            's',
+            \ 'OctaveTUIStepOut':           'S',
+            \ 'OctaveTUIRun':               'r',
+            \ 'OctaveTUIRunStacked':        'R',
+            \ 'OctaveTUIQuit':              'q',
+            \ 'OctaveTUIQuitStacked':       'Q',
+            \ 'OctaveTUIContinue':          'c',
+            \ 'OctaveTUIAddToWatch':        'p',
+            \ 'OctaveTUIRemoveFromWatch':   'P',
+            \ }
+
+let s:keymaps = deepcopy(s:default_keymaps)
+call map(s:keymaps,
+            \ {cmd, hotkey ->
+            \ has_key(s:user_keymaps, cmd) ?
+            \ s:user_keymaps[cmd] : hotkey})
+
 " set up keymap for main code buffer
-" TODO: let user customize keymap
 function! octavetui#SetMainKeymap() abort
-    nnoremap <buffer> <silent> b :<C-U>exec v:count.'OctaveTUISetBreakpoint'<CR>
-    nnoremap <buffer> <silent> B :<C-U>exec v:count.'OctaveTUIDelBreakpoint'<CR>
-    nnoremap <buffer> <silent> n :<C-U>exec v:count1.'OctaveTUINext'<CR>
-    nnoremap <buffer> <silent> s :OctaveTUIStepIn<CR>
-    nnoremap <buffer> <silent> S :OctaveTUIStepOut<CR>
-    nnoremap <buffer> <silent> r :OctaveTUIRun<CR>
-    nnoremap <buffer> <silent> R :OctaveTUIRunStacked<CR>
-    nnoremap <buffer> <silent> q :OctaveTUIQuit<CR>
-    nnoremap <buffer> <silent> Q :OctaveTUIQuitStacked<CR>
-    nnoremap <buffer> <silent> c :OctaveTUIContinue<CR>
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUISetBreakpoint'].' :<C-U>exec v:count."OctaveTUISetBreakpoint"<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIDelBreakpoint'].' :<C-U>exec v:count."OctaveTUIDelBreakpoint"<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUINext'         ].' :<C-U>exec v:count1."OctaveTUINext"<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIStepIn'       ].' :OctaveTUIStepIn<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIStepOut'      ].' :OctaveTUIStepOut<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIRun'          ].' :OctaveTUIRun<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIRunStacked'   ].' :OctaveTUIRunStacked<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIQuit'         ].' :OctaveTUIQuit<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIQuitStacked'  ].' :OctaveTUIQuitStacked<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIContinue'     ].' :OctaveTUIContinue<CR>'
 endfunction
 
 " unset keymap for main code buffer
 " TODO: original keymap is lost
 function! octavetui#DelMainKeymap() abort
-    silent! nunmap <buffer> b
-    silent! nunmap <buffer> B
-    silent! nunmap <buffer> n
-    silent! nunmap <buffer> s
-    silent! nunmap <buffer> S
-    silent! nunmap <buffer> r
-    silent! nunmap <buffer> R
-    silent! nunmap <buffer> q
-    silent! nunmap <buffer> Q
-    silent! nunmap <buffer> c
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUISetBreakpoint']
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIDelBreakpoint']
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUINext'         ]
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIStepIn'       ]
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIStepOut'      ]
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIRun'          ]
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIRunStacked'   ]
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIQuit'         ]
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIQuitStacked'  ]
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIContinue'     ]
 endfunction
 
 " set up keymap for variable explorer buffer
-" TODO: let user customize keymap
 function! octavetui#SetVexpKeymap() abort
-    nnoremap <buffer> <silent> p :OctaveTUIAddToWatch<CR>
-    nnoremap <buffer> <silent> P :OctaveTUIRemoveFromWatch<CR>
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIAddToWatch'     ].' :OctaveTUIAddToWatch<CR>'
+    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIRemoveFromWatch'].' :OctaveTUIRemoveFromWatch<CR>'
 endfunction
 
 " unset keymap for variable explorer buffer
 " TODO: let user customize keymap
 function! octavetui#DelVexpKeymap() abort
-    silent! nunmap <buffer> p
-    silent! nunmap <buffer> P
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIAddToWatch'     ]
+    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIRemoveFromWatch']
 endfunction
 
 

@@ -25,6 +25,12 @@ You can use any conventional plugin manager for Vim, such as [vim-plug](https://
 ```vim
 Plug 'NewComer00/octavetui.vim', {'branch': 'main'}
 ```
+
+This plugin can also be lazily loaded.
+```vim
+Plug 'NewComer00/octavetui.vim', {'branch': 'main', 'on': 'OctaveTUIStart'}
+```
+
 **🟨 IMPORTANT:** The GNU Octave package provided by `snap` [does not](https://askubuntu.com/questions/1238211/how-to-make-snaps-access-hidden-files-and-folders-in-home) have access to the hidden files and dirs placed in `$HOME` directory (for example, `~/.vim/`). This plugin will not work normally if its installation path is not accessible to Octave. To solve this problem, you can specify a different Vim plugin installation path, or you can reinstall the GNU Octave package by another package manager like `apt`.
 
 ## Features
@@ -33,7 +39,7 @@ Plug 'NewComer00/octavetui.vim', {'branch': 'main'}
 - [x] Variable watch list
 - [x] Visualizing the breakpoints and the program counter
 - [x] Debugging directly from the code buffer using hotkeys
-- [ ] Allowing users to customize their debugger hotkeys
+- [x] Allowing users to customize their debugger hotkeys
 - [ ] More ...
 
 ## Known Bugs
@@ -64,6 +70,8 @@ If you need to exit the TUI, please type the command below.
 ```
 
 ## Commands & Hotkeys
+Here we introduce the commands of this plugin and their default keymaps. You can customize those keymaps in your [configuration](#keymaps).
+
 ### Debugger-related (For Code Buffer)
 All the listed normal-mode-keymaps only take effect in the **code buffer**. You can manually disable them using command `:OctaveTUIDeactivateKeymap` and re-enable them using command `:OctaveTUIActivateKeymap`.
 
@@ -106,6 +114,38 @@ let g:octavetui_octave_executable = 'C:\Program Files\GNU Octave\Octave-7.3.0\mi
 
 " on the other platforms
 let g:octavetui_octave_executable = '/usr/bin/octave-cli'
+```
+
+### Keymaps
+A global dictionary `g:octavetui_user_keymaps` is used to record the user's keymaps. The default keymaps are listed below.
+```vim
+let g:octavetui_user_keymaps = {
+            \ 'OctaveTUISetBreakpoint':     'b',
+            \ 'OctaveTUIDelBreakpoint':     'B',
+            \ 'OctaveTUINext':              'n',
+            \ 'OctaveTUIStepIn':            's',
+            \ 'OctaveTUIStepOut':           'S',
+            \ 'OctaveTUIRun':               'r',
+            \ 'OctaveTUIRunStacked':        'R',
+            \ 'OctaveTUIQuit':              'q',
+            \ 'OctaveTUIQuitStacked':       'Q',
+            \ 'OctaveTUIContinue':          'c',
+            \ 'OctaveTUIAddToWatch':        'p',
+            \ 'OctaveTUIRemoveFromWatch':   'P',
+            \ }
+```
+
+You can customize some of them (or all of them) if you want.
+
+**NOTE:** Please specify some **unused** keys for this plugin. For example, the original keymap for `<Leader>b` will be overwritten or removed if I apply the following configuration.
+```vim
+let g:octavetui_user_keymaps = {
+            \ 'OctaveTUISetBreakpoint':     '<Leader>b',
+            \ 'OctaveTUIDelBreakpoint':     '<Leader>B',
+            \ 'OctaveTUINext':              '<Leader>n',
+            \ 'OctaveTUIAddToWatch':        '<Leader>p',
+            \ 'OctaveTUIRemoveFromWatch':   '<Leader>P',
+            \ }
 ```
 
 ## Tips
