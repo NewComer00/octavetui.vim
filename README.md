@@ -135,16 +135,21 @@ let g:octavetui_user_keymaps = {
             \ }
 ```
 
-You can customize some of them (or all of them) if you want.
+You can customize some of them (or all of them) if you want. Also, you can assign an empty key string `''` to the command which you don't want to map at all. The rest commands are bound to the default keymaps.
 
-**NOTE:** Please specify some **unused** keys for this plugin. For example, the original keymap for `<Leader>b` will be overwritten or removed if I apply the following configuration.
+**NOTE:** Please specify some **unused** keys for this plugin. For example, the original keymap for `<F5>` will be overwritten or removed if I apply the following configuration.
 ```vim
 let g:octavetui_user_keymaps = {
-            \ 'OctaveTUISetBreakpoint':     '<Leader>b',
-            \ 'OctaveTUIDelBreakpoint':     '<Leader>B',
-            \ 'OctaveTUINext':              '<Leader>n',
-            \ 'OctaveTUIAddToWatch':        '<Leader>p',
-            \ 'OctaveTUIRemoveFromWatch':   '<Leader>P',
+            \ 'OctaveTUISetBreakpoint':     '<F12>',
+            \ 'OctaveTUIDelBreakpoint':     '<Leader><F12>',
+            \ 'OctaveTUINext':              '<F10>',
+            \ 'OctaveTUIStepIn':            '<F11>',
+            \ 'OctaveTUIStepOut':           '<Leader><F11>',
+            \ 'OctaveTUIRun':               '<F5>',
+            \ 'OctaveTUIRunStacked':        '',
+            \ 'OctaveTUIQuit':              '<Leader><F5>',
+            \ 'OctaveTUIQuitStacked':       '',
+            \ 'OctaveTUIContinue':          '<Leader>c',
             \ }
 ```
 

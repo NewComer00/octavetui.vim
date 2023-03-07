@@ -172,44 +172,44 @@ call map(s:keymaps,
 
 " set up keymap for main code buffer
 function! octavetui#SetMainKeymap() abort
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUISetBreakpoint'].' :<C-U>exec v:count."OctaveTUISetBreakpoint"<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIDelBreakpoint'].' :<C-U>exec v:count."OctaveTUIDelBreakpoint"<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUINext'         ].' :<C-U>exec v:count1."OctaveTUINext"<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIStepIn'       ].' :OctaveTUIStepIn<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIStepOut'      ].' :OctaveTUIStepOut<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIRun'          ].' :OctaveTUIRun<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIRunStacked'   ].' :OctaveTUIRunStacked<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIQuit'         ].' :OctaveTUIQuit<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIQuitStacked'  ].' :OctaveTUIQuitStacked<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIContinue'     ].' :OctaveTUIContinue<CR>'
+    call s:SetLocalMap(s:keymaps['OctaveTUISetBreakpoint'], ':<C-U>exec v:count."OctaveTUISetBreakpoint"<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIDelBreakpoint'], ':<C-U>exec v:count."OctaveTUIDelBreakpoint"<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUINext'         ], ':<C-U>exec v:count1."OctaveTUINext"<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIStepIn'       ], ':OctaveTUIStepIn<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIStepOut'      ], ':OctaveTUIStepOut<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIRun'          ], ':OctaveTUIRun<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIRunStacked'   ], ':OctaveTUIRunStacked<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIQuit'         ], ':OctaveTUIQuit<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIQuitStacked'  ], ':OctaveTUIQuitStacked<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIContinue'     ], ':OctaveTUIContinue<CR>')
 endfunction
 
 " unset keymap for main code buffer
 " TODO: original keymap is lost
 function! octavetui#DelMainKeymap() abort
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUISetBreakpoint']
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIDelBreakpoint']
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUINext'         ]
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIStepIn'       ]
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIStepOut'      ]
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIRun'          ]
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIRunStacked'   ]
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIQuit'         ]
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIQuitStacked'  ]
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIContinue'     ]
+    call s:DelLocalMap(s:keymaps['OctaveTUISetBreakpoint'])
+    call s:DelLocalMap(s:keymaps['OctaveTUIDelBreakpoint'])
+    call s:DelLocalMap(s:keymaps['OctaveTUINext'         ])
+    call s:DelLocalMap(s:keymaps['OctaveTUIStepIn'       ])
+    call s:DelLocalMap(s:keymaps['OctaveTUIStepOut'      ])
+    call s:DelLocalMap(s:keymaps['OctaveTUIRun'          ])
+    call s:DelLocalMap(s:keymaps['OctaveTUIRunStacked'   ])
+    call s:DelLocalMap(s:keymaps['OctaveTUIQuit'         ])
+    call s:DelLocalMap(s:keymaps['OctaveTUIQuitStacked'  ])
+    call s:DelLocalMap(s:keymaps['OctaveTUIContinue'     ])
 endfunction
 
 " set up keymap for variable explorer buffer
 function! octavetui#SetVexpKeymap() abort
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIAddToWatch'     ].' :OctaveTUIAddToWatch<CR>'
-    exec 'nnoremap <buffer> <silent> '.s:keymaps['OctaveTUIRemoveFromWatch'].' :OctaveTUIRemoveFromWatch<CR>'
+    call s:SetLocalMap(s:keymaps['OctaveTUIAddToWatch'     ], ':OctaveTUIAddToWatch<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIRemoveFromWatch'], ':OctaveTUIRemoveFromWatch<CR>')
 endfunction
 
 " unset keymap for variable explorer buffer
-" TODO: let user customize keymap
+" TODO: original keymap is lost
 function! octavetui#DelVexpKeymap() abort
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIAddToWatch'     ]
-    exec 'silent! nunmap <buffer> '.s:keymaps['OctaveTUIRemoveFromWatch']
+    call s:DelLocalMap(s:keymaps['OctaveTUIAddToWatch'     ])
+    call s:DelLocalMap(s:keymaps['OctaveTUIRemoveFromWatch'])
 endfunction
 
 
@@ -400,6 +400,18 @@ endfunction
 " ============================================================================
 " PRIVATE FUNCTIONS
 " ============================================================================
+
+function! s:SetLocalMap(key, action) abort
+    if a:key != ''
+        exec 'nnoremap <buffer> <silent> '.a:key.' '.a:action
+    endif
+endfunction
+
+function! s:DelLocalMap(key) abort
+    if a:key != ''
+        exec 'silent! nunmap <buffer> '.a:key
+    endif
+endfunction
 
 function! s:RemoveTmpFile() abort
     call delete(s:tmpfile_variable)
