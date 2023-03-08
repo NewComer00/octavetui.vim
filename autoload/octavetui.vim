@@ -31,6 +31,8 @@ let s:tmpfile_breakpoint = tempname()
 let s:envvar_breakpoint = 'OCTAVETUI_BREAKPOINT'
 let s:tmpfile_nextexec = tempname()
 let s:envvar_nextexec = 'OCTAVETUI_NEXTEXEC'
+let s:tmpfile_lasterror = tempname()
+let s:envvar_lasterror = 'OCTAVETUI_LASTERR'
 
 let s:vexp_watch_list = []
 
@@ -120,6 +122,7 @@ function! s:SetPluginCommand() abort
     command! OctaveTUIQuit call octavetui#DBQuit('all')
     command! OctaveTUIQuitStacked call octavetui#DBQuit('stacked')
     command! OctaveTUIContinue call octavetui#DBContinue()
+    command! OctaveTUIGoToLastError call octavetui#GoToLastError()
 endfunction
 
 function! s:DelPluginCommand() abort
@@ -142,6 +145,7 @@ function! s:DelPluginCommand() abort
     delcommand OctaveTUIQuit
     delcommand OctaveTUIQuitStacked
     delcommand OctaveTUIContinue
+    delcommand OctaveTUIGoToLastError
 endfunction
 
 
@@ -162,6 +166,7 @@ const s:default_keymaps = {
             \ 'OctaveTUIContinue':          'c',
             \ 'OctaveTUIAddToWatch':        'p',
             \ 'OctaveTUIRemoveFromWatch':   'P',
+            \ 'OctaveTUIGoToLastError':     'E',
             \ }
 
 let s:keymaps = deepcopy(s:default_keymaps)
@@ -182,6 +187,7 @@ function! octavetui#SetMainKeymap() abort
     call s:SetLocalMap(s:keymaps['OctaveTUIQuit'         ], ':OctaveTUIQuit<CR>')
     call s:SetLocalMap(s:keymaps['OctaveTUIQuitStacked'  ], ':OctaveTUIQuitStacked<CR>')
     call s:SetLocalMap(s:keymaps['OctaveTUIContinue'     ], ':OctaveTUIContinue<CR>')
+    call s:SetLocalMap(s:keymaps['OctaveTUIGoToLastError'], ':OctaveTUIGoToLastError<CR>')
 endfunction
 
 " unset keymap for main code buffer
@@ -197,6 +203,7 @@ function! octavetui#DelMainKeymap() abort
     call s:DelLocalMap(s:keymaps['OctaveTUIQuit'         ])
     call s:DelLocalMap(s:keymaps['OctaveTUIQuitStacked'  ])
     call s:DelLocalMap(s:keymaps['OctaveTUIContinue'     ])
+    call s:DelLocalMap(s:keymaps['OctaveTUIGoToLastError'])
 endfunction
 
 " set up keymap for variable explorer buffer
@@ -239,6 +246,7 @@ function! octavetui#StartCli(cli_args) abort
                 \ s:envvar_max_precision: s:max_precision,
                 \ s:envvar_breakpoint: s:tmpfile_breakpoint,
                 \ s:envvar_nextexec: s:tmpfile_nextexec,
+                \ s:envvar_lasterror: s:tmpfile_lasterror,
                 \ }
 
     let l:cli_start_options = {
@@ -359,6 +367,15 @@ function! octavetui#DelBreakpoint(line_num) abort
     call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
+                \ {'repeat': -1})
+endfunction
+
+function! octavetui#GoToLastError() abort
+    let l:cmd = "octavetui_get_lasterror"
+    call delete(s:tmpfile_lasterror)
+    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
+    call timer_start(s:callback_check_interval,
+                \ function('s:UpdateLastError', []),
                 \ {'repeat': -1})
 endfunction
 
@@ -679,6 +696,36 @@ function! s:UpdateNextexec(timerid) abort
             endif
         endif
         call delete(s:tmpfile_nextexec)
+    endif
+endfunction
+
+function! s:UpdateLastError(timerid) abort
+    if s:FileIsFree(s:tmpfile_lasterror)
+        call timer_stop(a:timerid)
+
+        let l:main_buf_file = expand('#'.winbufnr(s:main_winid).':p')
+        let l:lasterror = readfile(s:tmpfile_lasterror)
+        if len(l:lasterror) == 1
+            let l:info = split(l:lasterror[0], '\t')
+            if len(l:info) == 3
+                let l:old_winid = win_getid()
+                " jump to code file and code line
+                let l:codeline = l:info[0]
+                let l:codecol = l:info[1]
+                let l:codefile = l:info[2]
+                call win_gotoid(s:main_winid)
+                " change buffer file in the code window
+                if l:main_buf_file != l:codefile
+                    exec 'e +' . l:codeline . ' ' . l:codefile
+                else
+                    exec l:codeline
+                endif
+                " center the code line
+                normal! zz
+                call win_gotoid(l:old_winid)
+            endif
+        endif
+        call delete(s:tmpfile_lasterror)
     endif
 endfunction
 

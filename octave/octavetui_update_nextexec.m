@@ -3,10 +3,7 @@ function octavetui_update_nextexec()
 
     fp = fopen(tempfile, 'wt');
 
-    octave_version_str = version();
-    octave_major_version = str2num(octave_version_str(1));
     frame_depth = 3;
-
     nextexec = '';
     if isdebugmode()
         [stack,_] = dbstack();
@@ -17,4 +14,3 @@ function octavetui_update_nextexec()
     fputs(fp, nextexec);
     fclose(fp);
 end
-

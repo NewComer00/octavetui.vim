@@ -87,6 +87,7 @@ Command                   | Hotkey  | Description
 `:OctaveTUIStepIn`        | `s`     | Step into the next code line.
 `:OctaveTUIStepOut`       | `S`     | Step out of the current function or script.
 `:OctaveTUIContinue`      | `c`     | Continue the code execution until it meets the next breakpoint.
+`:OctaveTUIGoToLastError` | `E`     | Jump to the code line where the last error occurred.
 
 ### Variable Explorer
 All the listed normal-mode-keymaps only take effect in the **variable explorer**.
@@ -132,6 +133,7 @@ let g:octavetui_user_keymaps = {
             \ 'OctaveTUIContinue':          'c',
             \ 'OctaveTUIAddToWatch':        'p',
             \ 'OctaveTUIRemoveFromWatch':   'P',
+            \ 'OctaveTUIGoToLastError':     'E',
             \ }
 ```
 
@@ -150,6 +152,7 @@ let g:octavetui_user_keymaps = {
             \ 'OctaveTUIQuit':              '<Leader><F5>',
             \ 'OctaveTUIQuitStacked':       '',
             \ 'OctaveTUIContinue':          '<Leader>c',
+            \ 'OctaveTUIGoToLastError':     '<Leader>e',
             \ }
 ```
 
