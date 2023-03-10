@@ -99,6 +99,10 @@ Command                     | Hotkey  | Description
 
 ## Configuration
 ### Octave Executable
+
+<details>
+  <summary>details</summary>
+
 You can specify the GNU Octave executable used by this plugin. The default configuration is
 ```vim
 " on Windows
@@ -117,7 +121,13 @@ let g:octavetui_octave_executable = 'C:\Program Files\GNU Octave\Octave-7.3.0\mi
 let g:octavetui_octave_executable = '/usr/bin/octave-cli'
 ```
 
+</details>
+
 ### Keymaps
+
+<details>
+  <summary>details</summary>
+
 A global dictionary `g:octavetui_user_keymaps` is used to record the user's keymaps. The default keymaps are listed below.
 ```vim
 let g:octavetui_user_keymaps = {
@@ -155,6 +165,42 @@ let g:octavetui_user_keymaps = {
             \ 'OctaveTUIGoToLastError':     '<Leader>e',
             \ }
 ```
+
+</details>
+
+### Highlight Groups & Signs
+
+<details>
+  <summary>details</summary>
+
+Default configuration:
+```vim
+" the style of the code line where a breakpoint is placed
+let g:octavetui_breakpoint_symbol = '🔴'
+let g:octavetui_breakpoint_hlcolor = 'darkblue'
+" please refer to :h sign-priority
+let g:octavetui_breakpoint_priority = 100
+
+" the style of the code line to be executed next
+let g:octavetui_nextexec_symbol = '⏩'
+let g:octavetui_nextexec_hlcolor = 'darkgreen'
+let g:octavetui_nextexec_priority = 101
+
+" the style of lines in the watchlist
+let g:octavetui_watch_symbol = '📌'
+let g:octavetui_watch_priority = 100
+```
+
+The customized configuration. For example:
+```vim
+let g:octavetui_breakpoint_hlcolor = 'DarkRed'
+let g:octavetui_breakpoint_symbol = 'B'
+let g:octavetui_nextexec_symbol = '->'
+let g:octavetui_watch_symbol = 'W'
+```
+**NOTE:** The names of highlight colors can be found in `:h cterm-colors`. For a better color display, you can add `set termguicolors` to your Vim config if your terminal emulator supports [TrueColor](https://github.com/termstandard/colors#truecolor-support-in-output-devices).
+
+</details>
 
 ## Tips
 ### Customizing the prompt of the Octave CLI
