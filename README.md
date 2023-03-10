@@ -16,7 +16,7 @@ This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octav
 
 ---
 
-![Plugin Screenshot](https://user-images.githubusercontent.com/37762193/221892507-989a53a8-d3e5-444d-8045-6340154110d2.png)
+![Plugin Screenshot](https://user-images.githubusercontent.com/37762193/224270959-b5920ef1-a46f-4bcf-a2b8-da2d563049b6.png)
 
 ---
 
