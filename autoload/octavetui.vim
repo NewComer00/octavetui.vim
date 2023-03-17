@@ -256,7 +256,8 @@ function! octavetui#StartCli(cli_args) abort
                 \ 'term_finish': 'close',
                 \ }
 
-    let l:cli_start_cmd = s:octave_executable.' --path '.s:octave_script_dir
+    let l:cli_start_cmd = '"'.s:octave_executable.'"'
+                \ .' --path '.s:octave_script_dir
                 \ .' '.a:cli_args
 
     belowright let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
