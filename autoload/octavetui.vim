@@ -491,14 +491,28 @@ function! s:FileIsFree(filename) abort
                 endif
             endif
         else
-            " on linux or other system with lsof command
-            let l:cmd = 'lsof ' . a:filename
-            silent call system(l:cmd)
-            " if the file is opened in other processes
-            if v:shell_error == 0
-                return v:false
+            " on linux or other unix-like system with lsof or fuser command
+            if executable('lsof')
+                let l:cmd = 'lsof ' . a:filename . ' 2>/dev/null'
+                silent let l:result = system(l:cmd)
+                " if the file is opened in other processes
+                if len(l:result) != 0
+                    return v:false
+                else
+                    return v:true
+                endif
+            elseif executable('fuser')
+                let l:cmd = 'fuser ' . a:filename . ' 2>/dev/null'
+                silent let l:result = system(l:cmd)
+                echom l:result
+                " if the file is opened in other processes
+                if len(l:result) != 0
+                    return v:false
+                else
+                    return v:true
+                endif
             else
-                return v:true
+                echoerr "OctaveTUI: this plugin requires `lsof` or `fuser` command to be installed on Unix-like OS."
             endif
         endif
     endif

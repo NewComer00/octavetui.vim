@@ -20,6 +20,25 @@ This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octav
 
 ---
 
+## Suggested Environments
+### Windows
+- Windows native [gVim](https://www.vim.org/download.php#pc)
+- Windows native [GNU Octave](https://octave.org/download#ms-windows)
+
+### Cygwin (POSIX Environment on Windows)
+- Cygwin package [Vim](https://cygwin.com/packages/summary/vim.html)
+- Cygwin package [GNU Octave](https://cygwin.com/packages/summary/octave.html)
+- `fuser` command is required for this plugin on Cygwin. You can get it from Cygwin package [psmisc](https://cygwin.com/packages/summary/psmisc.html).
+
+**NOTE:** Please do not use Cygwin Apps together with Windows native Apps. For example, it might cause incompatibility when using Vim from Cygwin/GitBash/MSYS/MSYS2 together with Windows native GNU Octave.
+
+### Unix-like OS
+- Vim package
+- GNU Octave package
+- `lsof` or `fuser` command is required for this plugin on Unix-like OS.
+
+**🟨 IMPORTANT:** The GNU Octave package provided by `snap` [does not](https://askubuntu.com/questions/1238211/how-to-make-snaps-access-hidden-files-and-folders-in-home) have access to the hidden files and dirs placed in `$HOME` directory (for example, `~/.vim/`). This plugin will not work normally if its installation path is not accessible to Octave. To solve this problem, you can specify a different Vim plugin installation path, or you can reinstall the GNU Octave package by another package manager like `apt`.
+
 ## Installation
 You can use any conventional plugin manager for Vim, such as [vim-plug](https://github.com/junegunn/vim-plug):
 ```vim
@@ -30,8 +49,6 @@ This plugin can also be lazily loaded.
 ```vim
 Plug 'NewComer00/octavetui.vim', {'branch': 'main', 'on': 'OctaveTUIStart'}
 ```
-
-**🟨 IMPORTANT:** The GNU Octave package provided by `snap` [does not](https://askubuntu.com/questions/1238211/how-to-make-snaps-access-hidden-files-and-folders-in-home) have access to the hidden files and dirs placed in `$HOME` directory (for example, `~/.vim/`). This plugin will not work normally if its installation path is not accessible to Octave. To solve this problem, you can specify a different Vim plugin installation path, or you can reinstall the GNU Octave package by another package manager like `apt`.
 
 ## Features
 - [x] Variable explorer

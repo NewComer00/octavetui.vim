@@ -10,6 +10,11 @@ if v:version < 802
     echoerr "OctaveTUI: this plugin requires vim >= 8.2."
     finish
 endif
+if has('unix')
+    if !executable('lsof') && !executable('fuser')
+        echoerr "OctaveTUI: this plugin requires `lsof` or `fuser` command to be installed on Unix-like OS."
+    endif
+endif
 let g:loaded_octavetui = 1
 
 if has('win32')
