@@ -23,7 +23,7 @@ This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octav
 ## Suggested Environments
 ### Windows
 - Windows native [gVim](https://www.vim.org/download.php#pc)
-- Windows native [GNU Octave](https://octave.org/download#ms-windows)
+- Windows native [GNU Octave](https://octave.org/download#ms-windows) (built with MSYS2 in MINGW64 environment)
 
 ### Cygwin (POSIX Environment on Windows)
 - Cygwin package [Vim](https://cygwin.com/packages/summary/vim.html)
