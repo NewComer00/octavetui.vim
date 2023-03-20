@@ -25,19 +25,19 @@ This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octav
 - Windows native [gVim](https://www.vim.org/download.php#pc)
 - Windows native [GNU Octave](https://octave.org/download#ms-windows) (built with MSYS2 in MINGW64 environment)
 
+**NOTE:** Currently, it is not supported by this plugin that using the Vim from Cygwin/Git Bash/MSYS/MSYS2 (where `:echo has('win32unix')` returns `1`) together with the Windows native GNU Octave. If you'd like to use the Vim from Cygwin, a pure [Cygwin environment](#cygwin-posix-environment-on-windows) could be one of your choices.
+
 ### Cygwin (POSIX Environment on Windows)
 - Cygwin package [Vim](https://cygwin.com/packages/summary/vim.html)
 - Cygwin package [GNU Octave](https://cygwin.com/packages/summary/octave.html)
 - `fuser` command is required for this plugin on Cygwin. You can get it from Cygwin package [psmisc](https://cygwin.com/packages/summary/psmisc.html).
-
-**NOTE:** Please do not use Cygwin Apps together with Windows native Apps. For example, it might cause incompatibility when using Vim from Cygwin/GitBash/MSYS/MSYS2 together with Windows native GNU Octave.
 
 ### Unix-like OS
 - Vim package
 - GNU Octave package
 - `lsof` or `fuser` command is required for this plugin on Unix-like OS.
 
-**🟨 IMPORTANT:** The GNU Octave package provided by `snap` [does not](https://askubuntu.com/questions/1238211/how-to-make-snaps-access-hidden-files-and-folders-in-home) have access to the hidden files and dirs placed in `$HOME` directory (for example, `~/.vim/`). This plugin will not work normally if its installation path is not accessible to Octave. To solve this problem, you can specify a different Vim plugin installation path, or you can reinstall the GNU Octave package by another package manager like `apt`.
+**NOTE:** The GNU Octave package provided by `snap` [does not](https://askubuntu.com/questions/1238211/how-to-make-snaps-access-hidden-files-and-folders-in-home) have access to the hidden files and dirs placed in `$HOME` directory (for example, `~/.vim/`). This plugin will not work normally if its installation path is not accessible to Octave. To solve this problem, you can specify a different Vim plugin installation path, or you can reinstall the GNU Octave package by another package manager like `apt`.
 
 ## Installation
 You can use any conventional plugin manager for Vim, such as [vim-plug](https://github.com/junegunn/vim-plug):
@@ -51,20 +51,19 @@ Plug 'NewComer00/octavetui.vim', {'branch': 'main', 'on': 'OctaveTUIStart'}
 ```
 
 ## Features
-- [x] Variable explorer
+- [x] Variable explorer & Variable watch list
 - [x] Octave command line interface
-- [x] Variable watch list
-- [x] Visualizing the breakpoints and the program counter
-- [x] Debugging directly from the code buffer using hotkeys
-- [x] Allowing users to customize their debugger hotkeys
+- [x] Visualized breakpoints & Program Counter
+- [x] Hotkeys for debugger
 - [ ] More ...
 
 ## Known Bugs
 Currently this Vim plugin communicates with Octave CLI in a very simple way. The plugin sends command strings to the terminal buffer where Octave CLI is running, and Octave CLI writes the output to some temp files which are then read and parsed by Vim. Communications between this plugin and Octave CLI are asynchronous.
 
 The known bugs are listed below:
-1. **Commands across multiple lines cannot be run directly in the Octave CLI buffer.** Once you press `<CR>` in the Octave CLI buffer, a command to update the TUI will be sent to Octave CLI automatically.
-2. **On Windows, the display of some variables or breakpoints might disappears rarely.** Try `:OctaveTUIRefresh` command to refresh the TUI. 
+1. **On Windows, the display of some variables or breakpoints might disappears rarely.** Try `:OctaveTUIRefresh` command to refresh the TUI. 
+2. **Commands across multiple lines cannot be run directly in the Octave CLI buffer.** Once you press `<CR>` in the Octave CLI buffer, a command to update the TUI will be sent to Octave CLI automatically.
+3. In the **debugging mode** of the Octave CLI (where the prompt displays `debug> `), **pressing `<CR>` with an empty command line** will cause a TUI-update instead of repeating the last debugging command. Besides, **the last command line history will be eaten up** after pressing `<CR>` with an empty command line in the debugging-mode CLI, which is an undesired behavior.
 
 ## Usage
 You need to open an Octave `.m` script with Vim, then type the command below to start the TUI.
