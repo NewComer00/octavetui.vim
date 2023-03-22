@@ -61,7 +61,7 @@ Plug 'NewComer00/octavetui.vim', {'branch': 'main', 'on': 'OctaveTUIStart'}
 Currently this Vim plugin communicates with Octave CLI in a very simple way. The plugin sends command strings to the terminal buffer where Octave CLI is running, and Octave CLI writes the output to some temp files which are then read and parsed by Vim. Communications between this plugin and Octave CLI are asynchronous.
 
 The known bugs are listed below:
-1. **On Windows, the display of some variables or breakpoints might disappears rarely.** Try `:OctaveTUIRefresh` command to refresh the TUI. 
+1. **[FIXED]** On Windows, the display of some variables or breakpoints might disappears rarely. Try `:OctaveTUIRefresh` command to refresh the TUI. 
 2. **Commands across multiple lines cannot be run directly in the Octave CLI buffer.** Once you press `<CR>` in the Octave CLI buffer, a command to update the TUI will be sent to Octave CLI automatically.
 3. In the **debugging mode** of the Octave CLI (where the prompt displays `debug> `), **pressing `<CR>` with an empty command line** will cause a TUI-update instead of repeating the last debugging command. Besides, **the last command line history will be eaten up** after pressing `<CR>` with an empty command line in the debugging-mode CLI, which is an undesired behavior.
 

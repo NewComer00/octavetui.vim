@@ -480,13 +480,13 @@ function! s:FileIsFree(filename) abort
             " TODO: a hacky way to find if a file is opened in other processes
             else
                 let l:temp = tempname()
-                call rename(a:filename, l:temp)
+                call system('move '.a:filename.' '.l:temp)
                 if filereadable(a:filename)
                     " file is readable but occupied
                     call delete(l:temp)
                     return v:false
                 else
-                    call rename(l:temp, a:filename)
+                    call system('move '.l:temp.' '.a:filename)
                     return v:true
                 endif
             endif
