@@ -3,10 +3,18 @@ function octavetui_hide_history()
     tempfile = getenv('OCTAVETUI_HISTORY');
 
     history_list = history(history_num+1);
-    fp = fopen(tempfile,'wt');
-    fputs(fp,strjoin(history_list,"\n"));
-    fclose(fp);
-
-    history('-r',tempfile);
-    delete(tempfile);
+    [fp, msg] = fopen(tempfile, 'wt');
+    if fp == -1
+        error(msg);
+    else
+        try
+            fputs(fp,strjoin(history_list,"\n"));
+        catch
+            fclose(fp);
+            rethrow(lasterror);
+        end
+        fclose(fp);
+        history('-r',tempfile);
+        delete(tempfile);
+    end
 end
