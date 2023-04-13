@@ -12,7 +12,7 @@ This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octav
 
 - Suggested Octave version: GNU Octave >= 6
 - [x] Support for Vim >= 8.2
-- [ ] Support for Neovim
+- [x] Support for Neovim >= 0.3
 
 ---
 

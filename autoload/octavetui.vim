@@ -16,6 +16,7 @@ let s:main_winid = ''
 let s:cli_buf_name = 'Octave CLI'
 let s:cli_bufnr = ''
 let s:cli_winid = ''
+let s:cli_termid = ''
 let s:vexp_buf_name = 'Variable Explorer'
 let s:vexp_bufnr = ''
 let s:vexp_winid = ''
@@ -249,26 +250,42 @@ function! octavetui#StartCli(cli_args) abort
                 \ s:envvar_lasterror: s:tmpfile_lasterror,
                 \ }
 
-    let l:cli_start_options = {
-                \ 'env': l:cli_envs,
-                \ 'term_kill': 'term',
-                \ 'term_name': s:cli_buf_name,
-                \ 'term_finish': 'close',
-                \ }
-
     let l:cli_start_cmd = '"'.s:octave_executable.'"'
                 \ .' --path '.s:octave_script_dir
                 \ .' '.a:cli_args
 
-    belowright let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
-    let s:cli_winid = win_getid()
+    if has('nvim')
+        " for Neovim
+        let s:cli_bufnr = bufadd('')
+        call bufload(s:cli_bufnr)
+        exec 'belowright sbuffer' . s:cli_bufnr
+        " auto close the term buffer after Octave exits normally
+        let l:cli_start_options = {
+                    \ 'env': l:cli_envs,
+                    \ 'on_exit': {job_id, exit_code, event ->
+                    \ exit_code == 0 ? execute("exec 'bdelete'.s:cli_bufnr") : ''}
+                    \ }
+        let s:cli_termid = termopen(l:cli_start_cmd, l:cli_start_options)
+        startinsert
+    else
+        " for Vim
+        let l:cli_start_options = {
+                    \ 'env': l:cli_envs,
+                    \ 'term_kill': 'term',
+                    \ 'term_name': s:cli_buf_name,
+                    \ 'term_finish': 'close',
+                    \ }
+        belowright let s:cli_bufnr = term_start(l:cli_start_cmd, l:cli_start_options)
+        let s:cli_termid = s:cli_bufnr
+    endif
 
+    let s:cli_winid = win_getid()
     tnoremap <silent><buffer> <CR> <CR><Cmd>call <SID>Update()<CR>
 endfunction
 
 function! octavetui#StopCli() abort
     let l:cmd_octave_quit = 'exit'
-    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd_octave_quit."\<CR>")
+    call s:TermSendKeys(s:cli_termid, "\<C-A>\<C-K>".l:cmd_octave_quit."\<CR>")
 endfunction
 
 function! octavetui#StartVarExp() abort
@@ -314,7 +331,7 @@ function! octavetui#AddToWatch() abort
     endif
 
     let l:cmd = "octavetui_modify_watchlist"
-    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
+    call s:TermSendKeys(s:cli_termid, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateVarExp', []),
                 \ {'repeat': -1})
@@ -335,7 +352,7 @@ function! octavetui#RemoveFromWatch() abort
     endif
 
     let l:cmd = "octavetui_modify_watchlist"
-    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
+    call s:TermSendKeys(s:cli_termid, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateVarExp', []),
                 \ {'repeat': -1})
@@ -350,7 +367,7 @@ function! octavetui#SetBreakpoint(line_num) abort
     let l:octave_filename = expand('%:t')
     let l:cmd = "octavetui_toggle_breakpoint set '".l:octave_filename."' ".l:line_num
     call delete(s:tmpfile_breakpoint)
-    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
+    call s:TermSendKeys(s:cli_termid, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
                 \ {'repeat': -1})
@@ -365,7 +382,7 @@ function! octavetui#DelBreakpoint(line_num) abort
     let l:octave_filename = expand('%:t')
     let l:cmd = "octavetui_toggle_breakpoint del '".l:octave_filename."' ".l:line_num
     call delete(s:tmpfile_breakpoint)
-    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
+    call s:TermSendKeys(s:cli_termid, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateBreakpoint', []),
                 \ {'repeat': -1})
@@ -374,7 +391,7 @@ endfunction
 function! octavetui#GoToLastError() abort
     let l:cmd = "octavetui_get_lasterror"
     call delete(s:tmpfile_lasterror)
-    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".l:cmd."\<CR>")
+    call s:TermSendKeys(s:cli_termid, "\<C-A>\<C-K>".l:cmd."\<CR>")
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateLastError', []),
                 \ {'repeat': -1})
@@ -385,7 +402,7 @@ function! octavetui#Refresh() abort
 endfunction
 
 function! octavetui#ExecCmd(cmd) abort
-    call term_sendkeys(s:cli_bufnr, "\<C-A>\<C-K>".a:cmd."\<CR>")
+    call s:TermSendKeys(s:cli_termid, "\<C-A>\<C-K>".a:cmd."\<CR>")
     call s:Update()
 endfunction
 
@@ -418,6 +435,16 @@ endfunction
 " ============================================================================
 " PRIVATE FUNCTIONS
 " ============================================================================
+
+function! s:TermSendKeys(termid, keystr) abort
+    if has('nvim')
+        let l:chanid = a:termid
+        call chansend(l:chanid, a:keystr)
+    else
+        let l:bufnr = a:termid
+        call term_sendkeys(l:bufnr, a:keystr)
+    endif
+endfunction
 
 function! s:SetLocalMap(key, action) abort
     if a:key != ''
@@ -559,7 +586,7 @@ function! s:Update() abort
     call s:RemoveTmpFile()
 
     let cmd = 'octavetui_update'
-    call term_sendkeys(s:cli_bufnr, cmd . "\<CR>")
+    call s:TermSendKeys(s:cli_termid, cmd . "\<CR>")
 
     call timer_start(s:callback_check_interval,
                 \ function('s:UpdateVarExp', []),

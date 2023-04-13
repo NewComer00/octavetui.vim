@@ -6,13 +6,16 @@
 if exists('g:loaded_octavetui')
     finish
 endif
-if v:version < 802
-    echoerr "OctaveTUI: this plugin requires vim >= 8.2."
+if !has('nvim') && v:version < 802
+    echoerr "OctaveTUI: this plugin requires Vim >= 8.2."
+    finish
+elseif has('nvim') && !has('nvim-0.3')
+    echoerr "OctaveTUI: this plugin requires Neovim >= 0.3."
     finish
 endif
 if has('unix')
     if !executable('lsof') && !executable('fuser')
-        echoerr "OctaveTUI: this plugin requires `lsof` or `fuser` command to be installed on Unix-like OS."
+        echoerr "OctaveTUI: this plugin requires `lsof` or `fuser` command to be installed on the Unix-like platform."
     endif
 endif
 let g:loaded_octavetui = 1
