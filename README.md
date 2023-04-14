@@ -10,9 +10,8 @@
 
 This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octave.
 
-- Suggested Octave version: GNU Octave >= 6
-- [x] Support for Vim >= 8.2
-- [x] Support for Neovim >= 0.3
+- Required editor version: `Vim >= 8.2` or `Neovim >= 0.3`
+- Recommended Octave version: `GNU Octave >= 6`
 
 ---
 
@@ -20,24 +19,42 @@ This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octav
 
 ---
 
-## Suggested Environments
+## Recommended Environments
 ### Windows
-- Windows native [gVim](https://www.vim.org/download.php#pc)
+
+<details>
+  <summary>details</summary>
+
+- Windows native [gVim](https://www.vim.org/download.php#pc) or native [Neovim](https://github.com/neovim/neovim/wiki/Installing-Neovim#windows)
 - Windows native [GNU Octave](https://octave.org/download#ms-windows) (built with MSYS2 in MINGW64 environment)
 
 **NOTE:** Currently, it is not supported by this plugin that using the Vim from Cygwin/Git Bash/MSYS/MSYS2 (where `:echo has('win32unix')` returns `1`) together with the Windows native GNU Octave. If you'd like to use the Vim from Cygwin, a pure [Cygwin environment](#cygwin-posix-environment-on-windows) could be one of your choices.
 
+</details>
+
 ### Cygwin (POSIX Environment on Windows)
+
+<details>
+  <summary>details</summary>
+
 - Cygwin package [Vim](https://cygwin.com/packages/summary/vim.html)
 - Cygwin package [GNU Octave](https://cygwin.com/packages/summary/octave.html)
 - `fuser` command is required for this plugin on Cygwin. You can get it from Cygwin package [psmisc](https://cygwin.com/packages/summary/psmisc.html).
 
+</details>
+
 ### Unix-like OS
-- Vim package
+
+<details>
+  <summary>details</summary>
+
+- Vim package or Neovim package
 - GNU Octave package
 - `lsof` or `fuser` command is required for this plugin on Unix-like OS.
 
 **NOTE:** The GNU Octave package provided by `snap` [does not](https://askubuntu.com/questions/1238211/how-to-make-snaps-access-hidden-files-and-folders-in-home) have access to the hidden files and dirs placed in `$HOME` directory (for example, `~/.vim/`). This plugin will not work normally if its installation path is not accessible to Octave. To solve this problem, you can specify a different Vim plugin installation path, or you can reinstall the GNU Octave package by another package manager like `apt`.
+
+</details>
 
 ## Installation
 You can use any conventional plugin manager for Vim, such as [vim-plug](https://github.com/junegunn/vim-plug):
@@ -66,11 +83,19 @@ The known bugs are listed below:
 3. In the **debugging mode** of the Octave CLI (where the prompt displays `debug> `), **pressing `<CR>` with an empty command line** will cause a TUI-update instead of repeating the last debugging command. Besides, **the last command line history will be eaten up** after pressing `<CR>` with an empty command line in the debugging-mode CLI, which is an undesired behavior.
 
 ## Usage
-You need to open an Octave `.m` script with Vim, then type the command below to start the TUI.
+After the installation of this plugin, please assign the location of your Octave CLI executable to the variable [`g:octavetui_octave_executable`](#octave-executable) in your Vim config. For example:
+```vim
+if has('win32')
+    let g:octavetui_octave_executable = 'C:\Program Files\GNU Octave\Octave-7.3.0\mingw64\bin\octave.bat'
+else
+    let g:octavetui_octave_executable = '/usr/bin/octave-cli'
+endif
+```
+After the config takes effect, you can open an Octave `.m` script with Vim, then type the command below to start the TUI.
 ```vim
 :OctaveTUIStart
 ```
-Also, you can start the TUI with arguments which will be delivered to the Octave executable.
+Besides, you can also start the TUI with arguments which will be delivered to the Octave executable.
 ```vim
 " please use the double quotes to deal with whitespace characters
 :OctaveTUIStart -q --image-path "D:\My Pictures"
@@ -121,20 +146,20 @@ Command                     | Hotkey  | Description
 
 You can specify the GNU Octave executable used by this plugin. The default configuration is
 ```vim
-" on Windows
-let g:octavetui_octave_executable = 'octave.bat'
-
-" on the other platforms
-let g:octavetui_octave_executable = 'octave-cli'
+if has('win32')
+    let g:octavetui_octave_executable = 'octave.bat'
+else
+    let g:octavetui_octave_executable = 'octave-cli'
+endif
 ```
 
 Modify this value in your Vim config if you have the GNU Octave executable installed in a different place. For example:
 ```vim
-" on Windows
-let g:octavetui_octave_executable = 'C:\Program Files\GNU Octave\Octave-7.3.0\mingw64\bin\octave.bat'
-
-" on the other platforms
-let g:octavetui_octave_executable = '/usr/bin/octave-cli'
+if has('win32')
+    let g:octavetui_octave_executable = 'C:\Program Files\GNU Octave\Octave-7.3.0\mingw64\bin\octave.bat'
+else
+    let g:octavetui_octave_executable = '/usr/bin/octave-cli'
+endif
 ```
 
 </details>
@@ -215,6 +240,34 @@ let g:octavetui_nextexec_symbol = '->'
 let g:octavetui_watch_symbol = 'W'
 ```
 **NOTE:** The names of highlight colors can be found in `:h cterm-colors`. For a better color display, you can add `set termguicolors` to your Vim config if your terminal emulator supports [TrueColor](https://github.com/termstandard/colors#truecolor-support-in-output-devices).
+
+</details>
+
+### Variable Explorer Configs
+
+<details>
+  <summary>details</summary>
+
+Default configuration:
+```vim
+" display the value of each element in VAR only if numel(VAR) <= 20
+let g:octavetui_max_displayed_numel = 20
+
+" display the value using 4 digits of precision (trailing zeros are not displayed)
+let g:octavetui_max_displayed_precision = 4
+
+" enable the startup logo in the variable explorer window
+let g:octavetui_enable_welcome_text = 1
+```
+
+The customized configuration. For example:
+```vim
+let g:octavetui_max_displayed_numel = 30
+let g:octavetui_max_displayed_precision = 2
+
+" do not show the logo on the plugin's startup
+let g:octavetui_enable_welcome_text = 0
+```
 
 </details>
 
