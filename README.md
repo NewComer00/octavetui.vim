@@ -11,7 +11,8 @@
 This plugin is aimed to provide a text-based user interfaces (TUI) for GNU Octave.
 
 - Required editor version: `Vim >= 8.2` or `Neovim >= 0.3`
-- Recommended Octave version: `GNU Octave >= 6`
+- Recommended Octave version: `GNU Octave >= 8.2` with [better support for UTF-8 encoding ](https://octave.org/news/release/2023/04/13/octave-8.2.0-released.html)
+- Required Octave version: `GNU Octave >= 5`
 
 ---
 
@@ -273,12 +274,12 @@ let g:octavetui_enable_welcome_text = 0
 
 ## Tips
 ### Customizing the prompt of the Octave CLI
-Please refer to this [documentation](https://docs.octave.org/latest/Customizing-the-Prompt.html). For example, you can create a personal config file `~/.octaverc` and place the following command in it:
+Please refer to this [documentation](https://docs.octave.org/latest/Customizing-the-Prompt.html). For example, you can add the following lines in your Octave config `~/.octaverc`. Then open the Octave CLI application (or start this plugin in Vim). You will get the prompt displayed in **red**.
+
 ```
-% using ANSI escape sequences for a colorful prompt
+% use ANSI escape sequences for a colorful prompt
 PS1('\[\033[01;31m\]octave:\#> \[\033[0m\]');
 ```
-Now open the Octave CLI application (or start this plugin in Vim). You will get the prompt displayed in **red**.
 
 **NOTE:** ANSI escape sequences are supported by `windows cmd` on Windows 10 and above, but you need to manually enable it. Run `regedit`; go to the path `HKEY_CURRENT_USER\Console` and create a DWORD item named `VirtualTerminalLevel` with the value of `1`. Now your `windows cmd` should be able to display the colored text. [Ref. 1](https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences) [Ref. 2](https://ss64.com/nt/syntax-ansi.html)
 

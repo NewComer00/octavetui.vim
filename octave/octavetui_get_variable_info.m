@@ -21,16 +21,29 @@ function [var_descriptions, var_valstrings] = octavetui_get_variable_info(var_va
         value_str = '...';
         max_numel = getenv('OCTAVETUI_MAX_NUMEL');
         if numel(_var) <= max_numel && length(size(_var)) <= 2
+            % if the variable is a unicode string
+            % display the string in an unambiguous printable form
             if ischar(_var)
+                unicode_index = unicode_idx(_var);
                 value_str = '';
-                for c = 1:length(_var)
-                    if isprint(_var(c))
-                        value_str = [value_str, _var(c)];
+                % if _var is an empty string, the loop will not be executed
+                for i = 1:max(unicode_index(:))
+                    % get the current unicode char
+                    cur_unicode_char = _var(unicode_index==i);
+                    % convert special characters in strings back to their escaped forms
+                    if cur_unicode_char == "\0"
+                        unescaped_char = '\0';
                     else
-                        hexcode = strcat('\x',...
-                            dec2hex(unicode2native(_var(c),'UTF-8'),2)...
-                            );
-                        value_str = [value_str, hexcode];
+                        unescaped_char = undo_string_escapes(cur_unicode_char);
+                    end
+                    % if the char is still unprintable, display it in octal
+                    if length(unescaped_char) == 1 && ~isprint(unescaped_char)
+                        octcode = strcat('\', dec2base(...
+                            uint8(unescaped_char), 8, 3));
+                        value_str = [value_str, octcode];
+                    else
+                        % if the escaped form of the char is printable, that's good!
+                        value_str = [value_str, unescaped_char];
                     end
                 end
                 value_str = strcat('"', value_str, '"');

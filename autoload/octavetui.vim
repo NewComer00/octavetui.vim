@@ -309,7 +309,7 @@ function! octavetui#StartVarExp() abort
     syntax match Identifier "\v^[^\t]+\t"
     syntax match Number "\v\t[^\t]+$"
     syntax keyword Type double single complex sparse char string logical
-                \ int8 int16 int32 int64
+                \ int8 int16 int32 int64 uint8 uint16 uint32 uint64
                 \ table timetable struct cell function_handle
 endfunction
 
